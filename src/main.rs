@@ -8,9 +8,20 @@ use controls::rotate_blob;
 use scene::setup_scene;
 
 fn main() {
-    let _ = cli::Cli::parse();
+    let args = cli::Cli::parse();
+    let progopt: cli::ProgOpt = args.into();
+
     App::new()
-        .add_plugins(DefaultPlugins)
+        .insert_resource(progopt)
+        .add_plugins(
+            DefaultPlugins.set(AssetPlugin {
+                file_path: std::env::current_dir()
+                    .unwrap()
+                    .to_string_lossy()
+                    .into_owned(),
+                ..Default::default()
+            }),
+        )
         .add_systems(Startup, setup_scene)
         .add_systems(Update, rotate_blob)
         .run();

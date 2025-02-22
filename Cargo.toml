@@ -4,7 +4,14 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-bevy = { version = "0.15.2", features = ["dynamic_linking", "wayland"] }
+bevy = { version = "0.15.2", features = [
+  "dynamic_linking",
+  "wayland",
+  "jpeg",
+  "png",
+  "bmp",
+  "webp",
+] }
 clap = { version = "4.5.29", features = ["derive"] }
 image = "0.25.5"
 
