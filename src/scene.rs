@@ -36,10 +36,10 @@ pub fn setup_scene(
         (
             Mesh3d(meshes.add(Cuboid::new(1.0, 1.0, 1.0))),
             MeshMaterial3d(materials.add(Color::srgb_u8(124, 144, 255))),
-            Transform::from_xyz(0.0, 0.5, 0.0),
+            Transform::from_xyz(0.0, 3.0, 0.0),
         ),
         CameraController,
-        MouseSensitivity(Vec2::new(0.003, 0.003)),
+        MouseSensitivity(Vec2::new(0.01, 0.01)),
     ));
 
     // light
@@ -51,6 +51,8 @@ pub fn setup_scene(
         Transform::from_xyz(4.0, 8.0, 4.0),
     ));
 }
+
+const IMG_BASE_SIZE: f32 = 12.0;
 
 pub fn draw_image(
     mut commands: Commands,
@@ -87,16 +89,18 @@ pub fn draw_image(
                 });
 
                 commands.spawn((
-                    Mesh3d(meshes.add(Rectangle::new(10.0 * aspect_ratio, 10.0))),
+                    Mesh3d(meshes.add(Rectangle::new(IMG_BASE_SIZE * aspect_ratio, IMG_BASE_SIZE))),
                     MeshMaterial3d(material),
-                    Transform::from_xyz(0.0, 5.0, -5.0),
+                    Transform::from_xyz(0.0, IMG_BASE_SIZE / 2.0, -IMG_BASE_SIZE / 2.0),
                 ));
 
                 // camera
                 commands.spawn((
                     Camera3d::default(),
-                    Transform::from_xyz(0.0, 5.0, 10.0)
-                        .looking_at(Vec3::new(0.0, 5.0, -5.0), Vec3::Y),
+                    Transform::from_xyz(0.0, IMG_BASE_SIZE / 2.0, IMG_BASE_SIZE / 1.3).looking_at(
+                        Vec3::new(0.0, IMG_BASE_SIZE / 2.0, -IMG_BASE_SIZE / 2.0),
+                        Vec3::Y,
+                    ),
                 ));
 
                 commands.entity(entity).despawn();

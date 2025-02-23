@@ -4,7 +4,7 @@ mod scene;
 
 use bevy::prelude::*;
 use clap::Parser;
-use controls::rotate_blob;
+use controls::control_blob;
 use scene::{draw_image, setup_scene};
 
 fn main() {
@@ -24,6 +24,6 @@ fn main() {
         )
         .add_systems(Startup, setup_scene)
         .add_systems(Update, draw_image)
-        .add_systems(Update, rotate_blob)
+        .add_systems(Update, control_blob)
         .run();
 }
