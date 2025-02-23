@@ -15,21 +15,21 @@ pub struct Cli {
 }
 
 pub enum ColorSpace {
-    OKHSV,
-    OKHSL,
-    HSLuv,
-    HSL,
-    HSV,
+    Okhsv,
+    Okhsl,
+    Hsluv,
+    Hsl,
+    Hsv,
 }
 
 impl From<String> for ColorSpace {
     fn from(s: String) -> Self {
         match s.to_lowercase().as_str() {
-            "okhsv" => ColorSpace::OKHSV,
-            "okhsl" => ColorSpace::OKHSL,
-            "hsluv" => ColorSpace::HSLuv,
-            "hsl" => ColorSpace::HSL,
-            "hsv" => ColorSpace::HSV,
+            "okhsv" => ColorSpace::Okhsv,
+            "okhsl" => ColorSpace::Okhsl,
+            "hsluv" => ColorSpace::Hsluv,
+            "hsl" => ColorSpace::Hsl,
+            "hsv" => ColorSpace::Hsv,
             _ => panic!("Invalid color space"),
         }
     }
