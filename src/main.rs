@@ -1,5 +1,6 @@
 mod cli;
 mod controls;
+mod providers;
 mod scene;
 
 use bevy::prelude::*;

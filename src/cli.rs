@@ -9,7 +9,7 @@ pub struct Cli {
     #[arg(short, long, num_args = 1, value_name = "FILE")]
     pub file: String,
 
-    /// Color space to use
+    /// Color space to use, defaults to OKHSV
     #[arg(short, long, value_name = "COLOR SPACE")]
     pub using: Option<String>,
 }

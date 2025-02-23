@@ -24,13 +24,6 @@ pub fn setup_scene(
     let img_handle: Handle<Image> = asset_server.load(&opts.file);
     commands.spawn(ImageLoader(img_handle));
 
-    // circular base
-    commands.spawn((
-        Mesh3d(meshes.add(Circle::new(4.0))),
-        MeshMaterial3d(materials.add(Color::WHITE)),
-        Transform::from_rotation(Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2)),
-    ));
-
     // cube
     commands.spawn((
         (
