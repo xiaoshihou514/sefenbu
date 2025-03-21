@@ -1,6 +1,12 @@
 use bevy::{
+    pbr::{MaterialPipeline, MaterialPipelineKey},
     prelude::*,
-    render::render_resource::{AsBindGroup, ShaderRef},
+    render::{
+        mesh::MeshVertexBufferLayoutRef,
+        render_resource::{
+            AsBindGroup, RenderPipelineDescriptor, ShaderRef, SpecializedMeshPipelineError,
+        },
+    },
 };
 
 const SHADER_PATH: &str = "shaders/okhsv.wgsl";
@@ -36,5 +42,16 @@ impl Material for OkhsvMaterial {
 
     fn alpha_mode(&self) -> AlphaMode {
         self._alpha_mode
+    }
+
+    fn specialize(
+        _pipeline: &MaterialPipeline<Self>,
+        descriptor: &mut RenderPipelineDescriptor,
+        _layout: &MeshVertexBufferLayoutRef,
+        _key: MaterialPipelineKey<Self>,
+    ) -> Result<(), SpecializedMeshPipelineError> {
+        // 禁用光照相关逻辑
+        descriptor.primitive.cull_mode = None;
+        Ok(())
     }
 }

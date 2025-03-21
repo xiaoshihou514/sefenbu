@@ -8,5 +8,5 @@
 fn fragment(
     mesh: VertexOutput,
 ) -> @location(0) vec4<f32> {
-    return textureSample(img_texture, img_sampler, mesh.uv) * vec4<f32>(1.0, 1.0, 1.0, 0.5);
+    return textureSample(img_texture, img_sampler, mesh.uv);
 }
