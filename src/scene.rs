@@ -8,6 +8,7 @@ use bevy::{
 use crate::{
     cli::ProgOpt,
     controls::{CameraController, MouseSensitivity},
+    providers::okhsv::OkhsvMaterial,
 };
 
 #[derive(Component)]
@@ -51,7 +52,7 @@ pub fn draw_image(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut images: ResMut<Assets<Image>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut materials: ResMut<Assets<OkhsvMaterial>>,
     mut meshes: ResMut<Assets<Mesh>>,
     query: Query<(Entity, &ImageLoader)>,
 ) {
@@ -75,15 +76,9 @@ pub fn draw_image(
                 );
                 let aspect_ratio = width / height;
 
-                let material = materials.add(StandardMaterial {
-                    base_color_texture: Some(loader.0.clone()),
-                    unlit: true,
-                    ..default()
-                });
-
                 commands.spawn((
                     Mesh3d(meshes.add(Rectangle::new(IMG_BASE_SIZE * aspect_ratio, IMG_BASE_SIZE))),
-                    MeshMaterial3d(material),
+                    MeshMaterial3d(materials.add(OkhsvMaterial::new(123.0, loader.0.clone()))),
                     Transform::from_xyz(0.0, IMG_BASE_SIZE / 2.0, -IMG_BASE_SIZE / 2.0),
                 ));
 
