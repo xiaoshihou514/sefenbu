@@ -43,9 +43,10 @@ pub struct ProgOpt {
 
 impl From<Cli> for ProgOpt {
     fn from(args: Cli) -> Self {
+        let space: ColorSpace = args.using.unwrap_or(String::from("okhsv")).into();
         ProgOpt {
             file: args.file,
-            space: args.using.unwrap_or(String::from("okhsv")).into(),
+            space,
         }
     }
 }

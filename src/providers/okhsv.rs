@@ -14,12 +14,12 @@ const SHADER_PATH: &str = "shaders/okhsv.wgsl";
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct OkhsvMaterial {
     #[uniform(0)]
-    h: f32,
+    pub h: f32,
     #[uniform(1)]
-    delta: f32,
+    pub delta: f32,
     #[texture(2)]
     #[sampler(3)]
-    color_texture: Handle<Image>,
+    pub color_texture: Handle<Image>,
     _alpha_mode: AlphaMode,
 }
 
@@ -27,7 +27,7 @@ impl OkhsvMaterial {
     pub fn new(h: f32, image: Handle<Image>) -> OkhsvMaterial {
         return OkhsvMaterial {
             h,
-            delta: 1.0,
+            delta: 10.0,
             color_texture: image,
             _alpha_mode: AlphaMode::Blend,
         };

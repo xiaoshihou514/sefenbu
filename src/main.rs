@@ -5,7 +5,7 @@ mod scene;
 
 use bevy::prelude::*;
 use clap::Parser;
-use controls::control_blob;
+use controls::{change_param, control_blob};
 use providers::okhsv::OkhsvMaterial;
 use scene::{draw_image, setup_scene};
 
@@ -25,7 +25,7 @@ fn main() {
         .insert_resource(progopt)
         .add_plugins((default_plugin, MaterialPlugin::<OkhsvMaterial>::default()))
         .add_systems(Startup, setup_scene)
-        .add_systems(Update, draw_image)
+        .add_systems(Update, (change_param, draw_image))
         .add_systems(Update, control_blob)
         .run();
 }

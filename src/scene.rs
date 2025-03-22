@@ -7,7 +7,7 @@ use bevy::{
 
 use crate::{
     cli::ProgOpt,
-    controls::{CameraController, MouseSensitivity},
+    controls::{ColorParam, KbdCooldown, MouseSensitivity},
     providers::okhsv::OkhsvMaterial,
 };
 
@@ -32,7 +32,6 @@ pub fn setup_scene(
             MeshMaterial3d(materials.add(Color::srgb_u8(124, 144, 255))),
             Transform::from_xyz(0.0, 3.0, 0.0),
         ),
-        CameraController,
         MouseSensitivity(Vec2::new(0.01, 0.01)),
     ));
 
@@ -55,6 +54,7 @@ pub fn draw_image(
     mut materials: ResMut<Assets<OkhsvMaterial>>,
     mut meshes: ResMut<Assets<Mesh>>,
     query: Query<(Entity, &ImageLoader)>,
+    _opts: ResMut<ProgOpt>,
 ) {
     for (entity, loader) in query.iter() {
         let load_state = asset_server.get_load_state(&loader.0);
@@ -77,9 +77,17 @@ pub fn draw_image(
                 let aspect_ratio = width / height;
 
                 commands.spawn((
-                    Mesh3d(meshes.add(Rectangle::new(IMG_BASE_SIZE * aspect_ratio, IMG_BASE_SIZE))),
-                    MeshMaterial3d(materials.add(OkhsvMaterial::new(108.0, loader.0.clone()))),
-                    Transform::from_xyz(0.0, IMG_BASE_SIZE / 2.0, -IMG_BASE_SIZE / 2.0),
+                    (
+                        Mesh3d(
+                            meshes.add(Rectangle::new(IMG_BASE_SIZE * aspect_ratio, IMG_BASE_SIZE)),
+                        ),
+                        MeshMaterial3d(materials.add(OkhsvMaterial::new(180.0, loader.0.clone()))),
+                        Transform::from_xyz(0.0, IMG_BASE_SIZE / 2.0, -IMG_BASE_SIZE / 2.0),
+                    ),
+                    ColorParam {
+                        delta: 1.0,
+                        cooldown: KbdCooldown::default(),
+                    },
                 ));
 
                 // camera
