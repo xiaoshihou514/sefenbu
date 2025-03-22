@@ -78,7 +78,7 @@ pub fn draw_image(
 
                 commands.spawn((
                     Mesh3d(meshes.add(Rectangle::new(IMG_BASE_SIZE * aspect_ratio, IMG_BASE_SIZE))),
-                    MeshMaterial3d(materials.add(OkhsvMaterial::new(123.0, loader.0.clone()))),
+                    MeshMaterial3d(materials.add(OkhsvMaterial::new(108.0, loader.0.clone()))),
                     Transform::from_xyz(0.0, IMG_BASE_SIZE / 2.0, -IMG_BASE_SIZE / 2.0),
                 ));
 

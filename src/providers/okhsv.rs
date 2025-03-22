@@ -15,8 +15,10 @@ const SHADER_PATH: &str = "shaders/okhsv.wgsl";
 pub struct OkhsvMaterial {
     #[uniform(0)]
     h: f32,
-    #[texture(1)]
-    #[sampler(2)]
+    #[uniform(1)]
+    delta: f32,
+    #[texture(2)]
+    #[sampler(3)]
     color_texture: Handle<Image>,
     _alpha_mode: AlphaMode,
 }
@@ -25,6 +27,7 @@ impl OkhsvMaterial {
     pub fn new(h: f32, image: Handle<Image>) -> OkhsvMaterial {
         return OkhsvMaterial {
             h,
+            delta: 1.0,
             color_texture: image,
             _alpha_mode: AlphaMode::Blend,
         };
@@ -50,7 +53,6 @@ impl Material for OkhsvMaterial {
         _layout: &MeshVertexBufferLayoutRef,
         _key: MaterialPipelineKey<Self>,
     ) -> Result<(), SpecializedMeshPipelineError> {
-        // 禁用光照相关逻辑
         descriptor.primitive.cull_mode = None;
         Ok(())
     }
