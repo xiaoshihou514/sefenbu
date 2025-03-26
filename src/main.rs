@@ -24,6 +24,7 @@ fn main() {
         .set(WindowPlugin {
             primary_window: Some(Window {
                 title: "sefenbu".to_string(),
+                mode: bevy::window::WindowMode::BorderlessFullscreen(MonitorSelection::Primary),
                 present_mode: bevy::window::PresentMode::AutoNoVsync,
                 ..default()
             }),

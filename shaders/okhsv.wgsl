@@ -18,9 +18,13 @@ fn fragment(
     var rgb: RGB = RGB(pt.r, pt.g, pt.b);
     var okhsv: HSV = srgb_to_okhsv(rgb);
 
-    // Make opaque if not in color slice
+    // Make opaque and grayscale if not in color slice
     if abs(okhsv.h * 360.0 - h) > (delta / 2.0) {
-        pt.a = 0.0;
+        var avg = (pt.r + pt.g + pt.b) / 3;
+        pt.r = avg;
+        pt.g = avg;
+        pt.b = avg;
+        pt.a = 0.15;
     }
 
     return pt;
