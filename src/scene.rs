@@ -33,38 +33,29 @@ pub fn setup_scene(
     commands.spawn(ImageLoader(img_handle.clone()));
 
     // create the global image filter shader
-    commands.insert_resource(ImageFilter(OkhsvMaterial::new(180.0, img_handle)));
+    commands.insert_resource(ImageFilter(OkhsvMaterial::new(360., img_handle)));
 
     // create the controls, consisting of the keybind timeout timer and the current value of the
     // params
     commands.insert_resource(ColorParam {
-        max: 360.0,
-        min: 0.0,
-        delta: 1.0,
+        max: 360.,
+        min: 0.,
+        delta: 1.,
         cooldown: KbdCooldown::default(),
     });
 
     // cube
     commands.spawn((
         (
-            Mesh3d(meshes.add(Cuboid::new(1.0, 1.0, 1.0))),
+            Mesh3d(meshes.add(Cuboid::new(1., 1., 1.))),
             MeshMaterial3d(materials.add(Color::srgb_u8(124, 144, 255))),
-            Transform::from_xyz(0.0, 3.0, 0.0),
+            Transform::from_xyz(0., 3., 0.),
         ),
         MeshController(Vec2::new(0.01, 0.01)),
     ));
-
-    // light
-    commands.spawn((
-        PointLight {
-            shadows_enabled: true,
-            ..default()
-        },
-        Transform::from_xyz(4.0, 8.0, 4.0),
-    ));
 }
 
-const IMG_BASE_SIZE: f32 = 12.0;
+const IMG_BASE_SIZE: f32 = 1080.;
 
 pub fn draw_image_await_load(
     mut commands: Commands,
@@ -102,21 +93,14 @@ pub fn draw_image_await_load(
             // spawn a cube the has the right dimensions and use the image as material
             commands.spawn((
                 (
-                    Mesh3d(meshes.add(Rectangle::new(IMG_BASE_SIZE * aspect_ratio, IMG_BASE_SIZE))),
-                    MeshMaterial3d(materials.add(filter.0.clone())),
-                    Transform::from_xyz(0.0, IMG_BASE_SIZE / 2.0, -IMG_BASE_SIZE / 2.0),
+                    Mesh2d(meshes.add(Rectangle::new(IMG_BASE_SIZE * aspect_ratio, IMG_BASE_SIZE))),
+                    MeshMaterial2d(materials.add(filter.0.clone())),
                 ),
                 ImageCanvas,
             ));
 
             // camera
-            commands.spawn((
-                Camera3d::default(),
-                Transform::from_xyz(0.0, IMG_BASE_SIZE / 2.0, IMG_BASE_SIZE / 1.3).looking_at(
-                    Vec3::new(0.0, IMG_BASE_SIZE / 2.0, -IMG_BASE_SIZE / 2.0),
-                    Vec3::Y,
-                ),
-            ));
+            commands.spawn(Camera2d);
 
             commands.entity(entity).despawn();
         }

@@ -69,7 +69,7 @@ pub fn change_param(
     mut param: ResMut<ColorParam>,
     time: Res<Time>,
     mut filter: ResMut<ImageFilter>,
-    mut canvas: Query<(&mut MeshMaterial3d<OkhsvMaterial>, &ImageCanvas)>,
+    mut canvas: Query<(&mut MeshMaterial2d<OkhsvMaterial>, &ImageCanvas)>,
     mut materials: ResMut<Assets<OkhsvMaterial>>,
     loader: Query<(Entity, &ImageLoader)>,
 ) {
@@ -80,7 +80,7 @@ pub fn change_param(
     if keyboard.pressed(KeyCode::KeyJ) {
         // decrement param
         filter.0.h -= if keyboard.pressed(KeyCode::ShiftLeft) {
-            param.delta * 10.0
+            param.delta * 10.
         } else {
             param.delta
         };
@@ -89,7 +89,7 @@ pub fn change_param(
     } else if keyboard.pressed(KeyCode::KeyK) {
         // increment param
         filter.0.h += if keyboard.pressed(KeyCode::ShiftLeft) {
-            param.delta * 10.0
+            param.delta * 10.
         } else {
             param.delta
         };

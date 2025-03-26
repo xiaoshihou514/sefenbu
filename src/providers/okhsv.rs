@@ -1,5 +1,4 @@
 use bevy::{
-    pbr::{MaterialPipeline, MaterialPipelineKey},
     prelude::*,
     render::{
         mesh::MeshVertexBufferLayoutRef,
@@ -7,6 +6,7 @@ use bevy::{
             AsBindGroup, RenderPipelineDescriptor, ShaderRef, SpecializedMeshPipelineError,
         },
     },
+    sprite::{AlphaMode2d, Material2d, Material2dKey},
 };
 
 const SHADER_PATH: &str = "shaders/okhsv.wgsl";
@@ -20,7 +20,7 @@ pub struct OkhsvMaterial {
     #[texture(2)]
     #[sampler(3)]
     pub color_texture: Handle<Image>,
-    _alpha_mode: AlphaMode,
+    _alpha_mode: AlphaMode2d,
 }
 
 impl OkhsvMaterial {
@@ -29,25 +29,24 @@ impl OkhsvMaterial {
             h,
             delta: 10.0,
             color_texture: image,
-            _alpha_mode: AlphaMode::Blend,
+            _alpha_mode: AlphaMode2d::Blend,
         };
     }
 }
 
-impl Material for OkhsvMaterial {
+impl Material2d for OkhsvMaterial {
     fn fragment_shader() -> ShaderRef {
         SHADER_PATH.into()
     }
 
-    fn alpha_mode(&self) -> AlphaMode {
+    fn alpha_mode(&self) -> AlphaMode2d {
         self._alpha_mode
     }
 
     fn specialize(
-        _pipeline: &MaterialPipeline<Self>,
         descriptor: &mut RenderPipelineDescriptor,
         _layout: &MeshVertexBufferLayoutRef,
-        _key: MaterialPipelineKey<Self>,
+        _key: Material2dKey<Self>,
     ) -> Result<(), SpecializedMeshPipelineError> {
         descriptor.primitive.cull_mode = None;
         Ok(())

@@ -3,7 +3,7 @@ mod controls;
 mod providers;
 mod scene;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, sprite::Material2dPlugin};
 use clap::Parser;
 use controls::{change_param, control_blob};
 use providers::okhsv::OkhsvMaterial;
@@ -34,7 +34,7 @@ fn main() {
 
     App::new()
         .insert_resource(progopt)
-        .add_plugins((default_plugin, MaterialPlugin::<OkhsvMaterial>::default()))
+        .add_plugins((default_plugin, Material2dPlugin::<OkhsvMaterial>::default()))
         .add_systems(Startup, setup_scene)
         .add_systems(Update, draw_image_await_load)
         .add_systems(Update, control_blob)
