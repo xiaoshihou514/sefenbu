@@ -98,7 +98,6 @@ pub fn draw_image_await_load(
             let aspect_ratio = image.texture_descriptor.size.width as f32
                 / image.texture_descriptor.size.height as f32;
 
-            info!("drawing with material {}", filter.0.h);
             // spawn a cube the has the right dimensions and use the image as material
             commands.spawn((
                 (
