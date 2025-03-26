@@ -35,7 +35,8 @@ pub fn setup_scene(
     // create the global image filter shader
     commands.insert_resource(ImageFilter(OkhsvMaterial::new(180.0, img_handle)));
 
-    // create the keybind timeout timer
+    // create the controls, consisting of the keybind timeout timer and the current value of the
+    // params
     commands.insert_resource(ColorParam {
         max: 360.0,
         min: 0.0,

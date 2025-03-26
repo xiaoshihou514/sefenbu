@@ -78,6 +78,7 @@ pub fn change_param(
     }
 
     if keyboard.pressed(KeyCode::KeyJ) {
+        // decrement param
         filter.0.h -= if keyboard.pressed(KeyCode::ShiftLeft) {
             param.delta * 10.0
         } else {
@@ -86,6 +87,7 @@ pub fn change_param(
         filter.0.h = filter.0.h.max(param.min);
         param.cooldown.reset();
     } else if keyboard.pressed(KeyCode::KeyK) {
+        // increment param
         filter.0.h += if keyboard.pressed(KeyCode::ShiftLeft) {
             param.delta * 10.0
         } else {
@@ -95,6 +97,7 @@ pub fn change_param(
         param.cooldown.reset();
     }
 
+    // apply change
     if filter.is_changed() {
         canvas.single_mut().0 .0 = materials.add(filter.0.clone());
     }
