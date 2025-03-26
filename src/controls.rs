@@ -1,11 +1,14 @@
 use bevy::{input::mouse::AccumulatedMouseMotion, prelude::*};
 
-use crate::providers::okhsv::OkhsvMaterial;
+use crate::{
+    providers::okhsv::OkhsvMaterial,
+    scene::{ImageCanvas, ImageFilter},
+};
 
 #[derive(Component)]
-pub struct MouseSensitivity(pub Vec2);
+pub struct MeshController(pub Vec2);
 
-#[derive(Component)]
+#[derive(Resource)]
 pub struct ColorParam {
     pub delta: f32,
     pub cooldown: KbdCooldown,
@@ -31,7 +34,7 @@ impl KbdCooldown {
 // https://bevyengine.org/examples/camera/first-person-view-model/
 pub fn control_blob(
     // initialized when setting up scene
-    mut blob: Query<(&mut Transform, &MouseSensitivity)>,
+    mut blob: Query<(&mut Transform, &MeshController)>,
     mouse: Res<ButtonInput<MouseButton>>,
     accumulated_mouse_motion: Res<AccumulatedMouseMotion>,
 ) {
@@ -61,36 +64,30 @@ pub fn control_blob(
 
 pub fn change_param(
     keyboard: Res<ButtonInput<KeyCode>>,
-    mut material_handler: Query<(&MeshMaterial3d<OkhsvMaterial>, &mut ColorParam)>,
+    mut param: ResMut<ColorParam>,
     time: Res<Time>,
+    mut filter: ResMut<ImageFilter>,
+    mut canvas: Query<(&mut MeshMaterial3d<OkhsvMaterial>, &ImageCanvas)>,
     mut materials: ResMut<Assets<OkhsvMaterial>>,
 ) {
-    let Ok((mesh_material, mut param)) = material_handler.get_single_mut() else {
-        return;
-    };
     if !param.cooldown.finished(time) {
         return;
     }
 
     if keyboard.pressed(KeyCode::KeyJ) {
-        println!("decreasing param");
-        if let Some(okhsv_material) = materials.remove(&mesh_material.0) {
-            materials.add(OkhsvMaterial::new(
-                okhsv_material.h - param.delta,
-                okhsv_material.color_texture,
-            ));
-            println!("updated param: {}", okhsv_material.h - param.delta);
-        }
+        info!("decreasing param");
+        filter.0.h -= param.delta;
+        info!("updated param: {}", filter.0.h);
         param.cooldown.reset();
     } else if keyboard.pressed(KeyCode::KeyK) {
-        println!("increasing param");
-        if let Some(okhsv_material) = materials.remove(&mesh_material.0) {
-            materials.add(OkhsvMaterial::new(
-                okhsv_material.h - param.delta,
-                okhsv_material.color_texture,
-            ));
-            println!("updated param: {}", okhsv_material.h - param.delta);
-        }
+        info!("increasing param");
+        filter.0.h += param.delta;
+        info!("updated param: {}", filter.0.h);
         param.cooldown.reset();
+    }
+
+    if filter.is_changed() {
+        info!("going to update shader");
+        canvas.single_mut().0 .0 = materials.add(filter.0.clone());
     }
 }

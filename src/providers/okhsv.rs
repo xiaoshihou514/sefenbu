@@ -32,10 +32,6 @@ impl OkhsvMaterial {
             _alpha_mode: AlphaMode::Blend,
         };
     }
-
-    pub fn update(self: &mut OkhsvMaterial, h: f32) {
-        self.h = h;
-    }
 }
 
 impl Material for OkhsvMaterial {
