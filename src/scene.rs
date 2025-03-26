@@ -37,6 +37,8 @@ pub fn setup_scene(
 
     // create the keybind timeout timer
     commands.insert_resource(ColorParam {
+        max: 360.0,
+        min: 0.0,
         delta: 1.0,
         cooldown: KbdCooldown::default(),
     });

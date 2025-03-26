@@ -19,7 +19,7 @@ fn fragment(
     var okhsv: HSV = srgb_to_okhsv(rgb);
 
     // Make opaque if not in color slice
-    if abs(okhsv.h - h) > delta / 2.0 {
+    if abs(okhsv.h * 360.0 - h) > (delta / 2.0) {
         pt.a = 0.0;
     }
 

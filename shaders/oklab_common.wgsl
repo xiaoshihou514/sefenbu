@@ -4,30 +4,13 @@ fn cbrt(x: f32) -> f32 {
 }
 const pi: f32 =
     3.1415926535897932384626433832795028841971693993751058209749445923078164062f;
+
 // https://bottosson.github.io/posts/colorpicker/
-struct Lab {
-  L: f32,
-  a: f32,
-  b: f32,
-};
-struct RGB {
-  r: f32,
-  g: f32,
-  b: f32,
-};
-struct HSV {
-  h: f32,
-  s: f32,
-  v: f32,
-};
-struct LC {
-  L: f32,
-  C: f32,
-};
-struct ST {
-  S: f32,
-  T: f32,
-};
+struct Lab { L: f32, a: f32, b: f32 };
+struct RGB { r: f32, g: f32, b: f32 };
+struct HSV { h: f32, s: f32, v: f32 };
+struct LC { L: f32, C: f32 };
+struct ST { S: f32, T: f32 };
 fn toe(x: f32) -> f32 {
   var k_1: f32 = 0.206f;
   var k_2: f32 = 0.03f;
@@ -175,7 +158,7 @@ fn find_cusp(a: f32, b: f32) -> LC {
   // b >= 1:
   var rgb_at_max: RGB = oklab_to_linear_srgb(Lab(1, S_cusp * a, S_cusp * b));
   var L_cusp: f32 =
-      cbrt(1.f / max(max(rgb_at_max.r, rgb_at_max.g), rgb_at_max.b));
+    cbrt(1.0 / max(max(rgb_at_max.r, rgb_at_max.g), rgb_at_max.b));
   var C_cusp: f32 = L_cusp * S_cusp;
 
   return LC(L_cusp, C_cusp);

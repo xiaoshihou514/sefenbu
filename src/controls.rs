@@ -2,7 +2,7 @@ use bevy::{input::mouse::AccumulatedMouseMotion, prelude::*};
 
 use crate::{
     providers::okhsv::OkhsvMaterial,
-    scene::{ImageCanvas, ImageFilter},
+    scene::{ImageCanvas, ImageFilter, ImageLoader},
 };
 
 #[derive(Component)]
@@ -10,12 +10,14 @@ pub struct MeshController(pub Vec2);
 
 #[derive(Resource)]
 pub struct ColorParam {
+    pub max: f32,
+    pub min: f32,
     pub delta: f32,
     pub cooldown: KbdCooldown,
 }
 
 pub struct KbdCooldown(pub Timer);
-const KBD_COOLDOWN_SECS: f32 = 0.1;
+const KBD_COOLDOWN_SECS: f32 = 0.15;
 impl Default for KbdCooldown {
     fn default() -> Self {
         return KbdCooldown(Timer::from_seconds(KBD_COOLDOWN_SECS, TimerMode::Once));
@@ -69,24 +71,34 @@ pub fn change_param(
     mut filter: ResMut<ImageFilter>,
     mut canvas: Query<(&mut MeshMaterial3d<OkhsvMaterial>, &ImageCanvas)>,
     mut materials: ResMut<Assets<OkhsvMaterial>>,
+    loader: Query<(Entity, &ImageLoader)>,
 ) {
-    if !param.cooldown.finished(time) {
+    if !param.cooldown.finished(time) || !loader.is_empty() {
         return;
     }
 
     if keyboard.pressed(KeyCode::KeyJ) {
         info!("decreasing param");
-        filter.0.h -= param.delta;
-        info!("updated param: {}", filter.0.h);
+        filter.0.h -= if keyboard.pressed(KeyCode::ShiftLeft) {
+            param.delta * 10.0
+        } else {
+            param.delta
+        };
+        filter.0.h = filter.0.h.max(param.min);
         param.cooldown.reset();
     } else if keyboard.pressed(KeyCode::KeyK) {
         info!("increasing param");
-        filter.0.h += param.delta;
-        info!("updated param: {}", filter.0.h);
+        filter.0.h += if keyboard.pressed(KeyCode::ShiftLeft) {
+            param.delta * 10.0
+        } else {
+            param.delta
+        };
+        filter.0.h = filter.0.h.min(param.max);
         param.cooldown.reset();
     }
 
     if filter.is_changed() {
+        info!("updated param: {}", filter.0.h);
         info!("going to update shader");
         canvas.single_mut().0 .0 = materials.add(filter.0.clone());
     }
