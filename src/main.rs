@@ -5,9 +5,9 @@ mod scene;
 
 use bevy::{prelude::*, sprite::Material2dPlugin};
 use clap::Parser;
-use controls::{change_param, control_blob};
+use controls::*;
 use providers::okhsv::OkhsvMaterial;
-use scene::{draw_image_await_load, setup_scene};
+use scene::*;
 
 fn main() {
     let args = cli::Cli::parse();
@@ -39,5 +39,6 @@ fn main() {
         .add_systems(Update, draw_image_await_load)
         .add_systems(Update, control_blob)
         .add_systems(Update, change_param)
+        .add_systems(Update, set_viewports)
         .run();
 }

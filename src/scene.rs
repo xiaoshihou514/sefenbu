@@ -2,7 +2,10 @@ use bevy::{
     asset::LoadState,
     image::{ImageSampler, ImageSamplerDescriptor},
     prelude::*,
-    render::render_resource::{AddressMode, FilterMode},
+    render::{
+        camera::Viewport,
+        render_resource::{AddressMode, FilterMode},
+    },
 };
 
 use crate::{
@@ -19,6 +22,13 @@ pub struct ImageFilter(pub OkhsvMaterial);
 
 #[derive(Component)]
 pub struct ImageCanvas;
+
+#[derive(Component)]
+pub enum CamViewPort {
+    ImageFilter,
+    ColorDistribution,
+    ColorTunnel,
+}
 
 pub fn setup_scene(
     mut commands: Commands,
@@ -55,7 +65,9 @@ pub fn setup_scene(
     ));
 }
 
-const IMG_BASE_SIZE: f32 = 1080.;
+const IMG_BASE_SIZE: f32 = 1080. * 4. / 5.;
+const COLOR_2D_VIZ_COORD: Vec3 = Vec3::new(2000., 0., 0.);
+const COLOR_2D_VIZ_SIZE: Vec3 = Vec3::splat(256.);
 
 pub fn draw_image_await_load(
     mut commands: Commands,
@@ -66,6 +78,7 @@ pub fn draw_image_await_load(
     _opts: ResMut<ProgOpt>,
     filter: Res<ImageFilter>,
     mut materials: ResMut<Assets<OkhsvMaterial>>,
+    mut color_materials: ResMut<Assets<ColorMaterial>>,
 ) {
     if query.is_empty() {
         // image already loaded
@@ -100,10 +113,80 @@ pub fn draw_image_await_load(
             ));
 
             // camera
-            commands.spawn(Camera2d);
+            commands.spawn((
+                (
+                    Camera2d,
+                    Camera {
+                        order: 1,
+                        ..default()
+                    },
+                ),
+                CamViewPort::ImageFilter,
+            ));
 
             commands.entity(entity).despawn();
+
+            // TESTING
+            let mut mesh = Mesh::from(Rectangle::default());
+            // Build vertex colors for the quad. One entry per vertex (the corners of the quad)
+            let vertex_colors: Vec<[f32; 4]> = vec![
+                LinearRgba::RED.to_f32_array(),
+                LinearRgba::GREEN.to_f32_array(),
+                LinearRgba::BLUE.to_f32_array(),
+                LinearRgba::WHITE.to_f32_array(),
+            ];
+            // Insert the vertex colors as an attribute
+            mesh.insert_attribute(Mesh::ATTRIBUTE_COLOR, vertex_colors);
+
+            let mesh_handle = meshes.add(mesh);
+
+            // Spawn camera
+            commands.spawn((
+                (
+                    Camera2d,
+                    Transform::from_translation(COLOR_2D_VIZ_COORD),
+                    Camera {
+                        order: 2,
+                        ..default()
+                    },
+                ),
+                CamViewPort::ColorDistribution,
+            ));
+
+            // Spawn the quad with vertex colors
+            commands.spawn((
+                Mesh2d(mesh_handle.clone()),
+                MeshMaterial2d(color_materials.add(ColorMaterial::default())),
+                Transform::from_translation(COLOR_2D_VIZ_COORD).with_scale(COLOR_2D_VIZ_SIZE),
+            ));
         }
         _ => (),
+    }
+}
+
+pub fn set_viewports(windows: Query<&Window>, mut query: Query<(&CamViewPort, &mut Camera)>) {
+    let window = windows.get_single().unwrap();
+    let size = window.physical_size();
+    let img_filter_width = size.x * 4 / 5;
+    let viz_width = size.x / 5;
+
+    for (camera_position, mut camera) in &mut query {
+        let (physical_position, physical_size) = match camera_position {
+            CamViewPort::ImageFilter => (UVec2::new(0, 0), UVec2::new(img_filter_width, size.y)),
+            CamViewPort::ColorDistribution => (
+                UVec2::new(img_filter_width, size.y / 2),
+                UVec2::new(viz_width, size.y / 2),
+            ),
+            CamViewPort::ColorTunnel => (
+                UVec2::new(img_filter_width, 0),
+                UVec2::new(viz_width, size.y / 2),
+            ),
+        };
+
+        camera.viewport = Some(Viewport {
+            physical_position,
+            physical_size,
+            ..default()
+        });
     }
 }
