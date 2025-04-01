@@ -1,6 +1,6 @@
 // cube root
 fn cbrt(x: f32) -> f32 {
-    return pow(x, 1.0 / 3.0);
+    return pow(x, 1. / 3.0);
 }
 const pi: f32 =
     3.1415926535897932384626433832795028841971693993751058209749445923078164062f;
@@ -158,7 +158,7 @@ fn find_cusp(a: f32, b: f32) -> LC {
   // b >= 1:
   var rgb_at_max: RGB = oklab_to_linear_srgb(Lab(1, S_cusp * a, S_cusp * b));
   var L_cusp: f32 =
-    cbrt(1.0 / max(max(rgb_at_max.r, rgb_at_max.g), rgb_at_max.b));
+    cbrt(1. / max(max(rgb_at_max.r, rgb_at_max.g), rgb_at_max.b));
   var C_cusp: f32 = L_cusp * S_cusp;
 
   return LC(L_cusp, C_cusp);
@@ -211,4 +211,44 @@ fn srgb_to_okhsv(rgb: RGB) -> HSV
 
 	return HSV(h, s, v);
 }
+fn okhsv_to_srgb(hsv: HSV) -> RGB
+{
+	var h: f32 = hsv.h;
+	var s: f32 = hsv.s;
+	var v: f32 = hsv.v;
 
+	var a_: f32 = cos(2.f * pi * h);
+	var b_: f32 = sin(2.f * pi * h);
+	
+	var cusp: LC = find_cusp(a_, b_);
+	var ST_max: ST = to_ST(cusp);
+	var S_max: f32 = ST_max.S;
+	var T_max: f32 = ST_max.T;
+	var S_0: f32 = 0.5f;
+	var k: f32 = 1 - S_0 / S_max;
+
+	// first we compute L and V as if the gamut is a perfect triangle:
+
+	// L, C when v==1:
+	var L_v: f32 = 1     - s * S_0 / (S_0 + T_max - T_max * k * s);
+	var C_v: f32 = s * T_max * S_0 / (S_0 + T_max - T_max * k * s);
+
+	var L: f32 = v * L_v;
+	var C: f32 = v * C_v;
+
+	// then we compensate for both toe and the curved top part of the triangle:
+	var L_vt: f32 = toe_inv(L_v);
+	var C_vt: f32 = C_v * L_vt / L_v;
+
+	var L_new: f32 = toe_inv(L);
+	C = C * L_new / L;
+	L = L_new;
+
+	var rgb_scale: RGB = oklab_to_linear_srgb(Lab(L_vt, a_ * C_vt, b_ * C_vt));
+	var scale_L: f32 = cbrt(1.f / max(max(rgb_scale.r, rgb_scale.g), max(rgb_scale.b, 0.f)));
+
+	L = L * scale_L;
+	C = C * scale_L;
+
+    return oklab_to_linear_srgb(Lab(L, C * a_, C * b_));
+}

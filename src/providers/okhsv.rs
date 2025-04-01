@@ -1,15 +1,8 @@
 use bevy::{
     prelude::*,
-    render::{
-        mesh::MeshVertexBufferLayoutRef,
-        render_resource::{
-            AsBindGroup, RenderPipelineDescriptor, ShaderRef, SpecializedMeshPipelineError,
-        },
-    },
-    sprite::{AlphaMode2d, Material2d, Material2dKey},
+    render::render_resource::{AsBindGroup, ShaderRef},
+    sprite::{AlphaMode2d, Material2d},
 };
-
-const SHADER_PATH: &str = "shaders/okhsv.wgsl";
 
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct OkhsvMaterial {
@@ -36,19 +29,37 @@ impl OkhsvMaterial {
 
 impl Material2d for OkhsvMaterial {
     fn fragment_shader() -> ShaderRef {
-        SHADER_PATH.into()
+        "shaders/okhsv.wgsl".into()
     }
 
     fn alpha_mode(&self) -> AlphaMode2d {
         self._alpha_mode
     }
+}
 
-    fn specialize(
-        descriptor: &mut RenderPipelineDescriptor,
-        _layout: &MeshVertexBufferLayoutRef,
-        _key: Material2dKey<Self>,
-    ) -> Result<(), SpecializedMeshPipelineError> {
-        descriptor.primitive.cull_mode = None;
-        Ok(())
+#[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
+pub struct Okhsv2DVizMaterial {
+    #[texture(2)]
+    #[sampler(3)]
+    pub color_texture: Handle<Image>,
+    _alpha_mode: AlphaMode2d,
+}
+
+impl Okhsv2DVizMaterial {
+    pub fn new(image: Handle<Image>) -> Okhsv2DVizMaterial {
+        return Okhsv2DVizMaterial {
+            color_texture: image,
+            _alpha_mode: AlphaMode2d::Blend,
+        };
+    }
+}
+
+impl Material2d for Okhsv2DVizMaterial {
+    fn fragment_shader() -> ShaderRef {
+        "shaders/okhsv_2dviz.wgsl".into()
+    }
+
+    fn alpha_mode(&self) -> AlphaMode2d {
+        self._alpha_mode
     }
 }

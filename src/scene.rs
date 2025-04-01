@@ -11,7 +11,7 @@ use bevy::{
 use crate::{
     cli::ProgOpt,
     controls::{ColorParam, KbdCooldown, MeshController},
-    providers::okhsv::OkhsvMaterial,
+    providers::okhsv::{Okhsv2DVizMaterial, OkhsvMaterial},
 };
 
 #[derive(Component)]
@@ -67,7 +67,7 @@ pub fn setup_scene(
 
 const IMG_BASE_SIZE: f32 = 1080. * 4. / 5.;
 const COLOR_2D_VIZ_COORD: Vec3 = Vec3::new(2000., 0., 0.);
-const COLOR_2D_VIZ_SIZE: Vec3 = Vec3::splat(256.);
+const COLOR_2D_VIZ_SIZE: Vec3 = Vec3::splat(300.);
 
 pub fn draw_image_await_load(
     mut commands: Commands,
@@ -77,8 +77,8 @@ pub fn draw_image_await_load(
     query: Query<(Entity, &ImageLoader)>,
     _opts: ResMut<ProgOpt>,
     filter: Res<ImageFilter>,
-    mut materials: ResMut<Assets<OkhsvMaterial>>,
-    mut color_materials: ResMut<Assets<ColorMaterial>>,
+    mut image_filters: ResMut<Assets<OkhsvMaterial>>,
+    mut viz2d_materials: ResMut<Assets<Okhsv2DVizMaterial>>,
 ) {
     if query.is_empty() {
         // image already loaded
@@ -107,7 +107,7 @@ pub fn draw_image_await_load(
             commands.spawn((
                 (
                     Mesh2d(meshes.add(Rectangle::new(IMG_BASE_SIZE * aspect_ratio, IMG_BASE_SIZE))),
-                    MeshMaterial2d(materials.add(filter.0.clone())),
+                    MeshMaterial2d(image_filters.add(filter.0.clone())),
                 ),
                 ImageCanvas,
             ));
@@ -127,18 +127,6 @@ pub fn draw_image_await_load(
             commands.entity(entity).despawn();
 
             // TESTING
-            let mut mesh = Mesh::from(Rectangle::default());
-            // Build vertex colors for the quad. One entry per vertex (the corners of the quad)
-            let vertex_colors: Vec<[f32; 4]> = vec![
-                LinearRgba::RED.to_f32_array(),
-                LinearRgba::GREEN.to_f32_array(),
-                LinearRgba::BLUE.to_f32_array(),
-                LinearRgba::WHITE.to_f32_array(),
-            ];
-            // Insert the vertex colors as an attribute
-            mesh.insert_attribute(Mesh::ATTRIBUTE_COLOR, vertex_colors);
-
-            let mesh_handle = meshes.add(mesh);
 
             // Spawn camera
             commands.spawn((
@@ -155,8 +143,10 @@ pub fn draw_image_await_load(
 
             // Spawn the quad with vertex colors
             commands.spawn((
-                Mesh2d(mesh_handle.clone()),
-                MeshMaterial2d(color_materials.add(ColorMaterial::default())),
+                Mesh2d(meshes.add(Mesh::from(Rectangle::default())).clone()),
+                MeshMaterial2d(
+                    viz2d_materials.add(Okhsv2DVizMaterial::new(filter.0.color_texture.clone())),
+                ),
                 Transform::from_translation(COLOR_2D_VIZ_COORD).with_scale(COLOR_2D_VIZ_SIZE),
             ));
         }
