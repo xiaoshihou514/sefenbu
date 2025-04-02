@@ -1,8 +1,9 @@
 use bevy::{input::mouse::AccumulatedMouseMotion, prelude::*};
 
 use crate::{
-    providers::okhsv::OkhsvMaterial,
-    scene::{ImageCanvas, ImageFilter, ImageLoader},
+    providers::okhsv::{Okhsv2DVizMaterial, OkhsvMaterial, OkhsvProvider},
+    scene::{ImageCanvas, ImageLoader},
+    Viz2DCanvas,
 };
 
 #[derive(Component)]
@@ -10,8 +11,6 @@ pub struct MeshController(pub Vec2);
 
 #[derive(Resource)]
 pub struct ColorParam {
-    pub max: f32,
-    pub min: f32,
     pub delta: f32,
     pub cooldown: KbdCooldown,
 }
@@ -68,37 +67,36 @@ pub fn change_param(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut param: ResMut<ColorParam>,
     time: Res<Time>,
-    mut filter: ResMut<ImageFilter>,
-    mut canvas: Query<(&mut MeshMaterial2d<OkhsvMaterial>, &ImageCanvas)>,
-    mut materials: ResMut<Assets<OkhsvMaterial>>,
+    mut p: ResMut<OkhsvProvider>,
+    mut img_canvas: Query<(&mut MeshMaterial2d<OkhsvMaterial>, &ImageCanvas)>,
+    mut viz2d_canvas: Query<(&mut MeshMaterial2d<Okhsv2DVizMaterial>, &Viz2DCanvas)>,
+    mut img_filters: ResMut<Assets<OkhsvMaterial>>,
+    mut viz2d_materials: ResMut<Assets<Okhsv2DVizMaterial>>,
     loader: Query<(Entity, &ImageLoader)>,
 ) {
     if !param.cooldown.finished(time) || !loader.is_empty() {
         return;
     }
 
+    let change = if keyboard.pressed(KeyCode::ShiftLeft) {
+        param.delta * 10.
+    } else {
+        param.delta
+    };
+
     if keyboard.pressed(KeyCode::KeyJ) {
         // decrement param
-        filter.0.h -= if keyboard.pressed(KeyCode::ShiftLeft) {
-            param.delta * 10.
-        } else {
-            param.delta
-        };
-        filter.0.h = filter.0.h.max(param.min);
+        p.decr(change);
         param.cooldown.reset();
     } else if keyboard.pressed(KeyCode::KeyK) {
         // increment param
-        filter.0.h += if keyboard.pressed(KeyCode::ShiftLeft) {
-            param.delta * 10.
-        } else {
-            param.delta
-        };
-        filter.0.h = filter.0.h.min(param.max);
+        p.incr(change);
         param.cooldown.reset();
     }
 
-    // apply change
-    if filter.is_changed() {
-        canvas.single_mut().0 .0 = materials.add(filter.0.clone());
+    // apply change, original material substituted
+    if p.is_changed() {
+        img_canvas.single_mut().0 .0 = img_filters.add(p.filter.clone());
+        viz2d_canvas.single_mut().0 .0 = viz2d_materials.add(p.viz2d_material.clone())
     }
 }

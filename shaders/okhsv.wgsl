@@ -11,16 +11,14 @@
 @group(2) @binding(3) var img_sampler: sampler;
 
 @fragment
-fn fragment(
-    mesh: VertexOutput,
-) -> @location(0) vec4<f32> {
+fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     var pt: vec4<f32> = textureSample(img_texture, img_sampler, mesh.uv);
-    var rgb: RGB = RGB(pt.r, pt.g, pt.b);
-    var okhsv: HSV = srgb_to_okhsv(rgb);
+    let rgb: RGB = RGB(pt.r, pt.g, pt.b);
+    let okhsv: HSV = srgb_to_okhsv(rgb);
 
     // Make opaque and grayscale if not in color slice
     if abs(okhsv.h * 360. - h) > (delta / 2.) {
-        var avg = (pt.r + pt.g + pt.b) / 3;
+        let avg = (pt.r + pt.g + pt.b) / 3;
         pt.r = avg;
         pt.g = avg;
         pt.b = avg;
