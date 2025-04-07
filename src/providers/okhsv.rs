@@ -26,18 +26,24 @@ impl OkhsvProvider {
 
     pub fn decr(&mut self, change: f32) {
         self.filter.h -= change;
+        // overflow protection
         self.filter.h = self.filter.h.max(0.);
         self.viz2d_material.h -= change;
+        // overflow protection
         self.viz2d_material.h = self.filter.h.max(0.);
     }
 
     pub fn incr(&mut self, change: f32) {
         self.filter.h += change;
+        // overflow protection
         self.filter.h = self.filter.h.min(360.);
         self.viz2d_material.h += change;
+        // overflow protection
         self.viz2d_material.h = self.filter.h.min(360.);
     }
 
+    // returns a vector of (value, proportion) pair
+    // TODO: abstract
     pub fn histogram_data(&self, img: &Image) -> Vec<(f32, f32)> {
         let mut result: BTreeMap<i64, i64> = BTreeMap::new();
         let w = img.width();
