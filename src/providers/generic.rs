@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use bevy::prelude::*;
-pub trait GenericProvider{
+pub trait Provider{
     // this function should return the value for histogram given a pixel
     fn convert(&self,pixel:&Oklaba) -> i64;
     // the max value for the key field

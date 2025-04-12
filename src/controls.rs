@@ -1,7 +1,7 @@
 use bevy::{input::mouse::AccumulatedMouseMotion, prelude::*};
 
 use crate::{
-    providers::okhsv::{Okhsv2DVizMaterial, OkhsvMaterial, OkhsvProvider},
+    providers::{generic::Provider, okhsv::{Okhsv2DVizMaterial, OkhsvMaterial, OkhsvProvider}},
     scene::{ImageCanvas, ImageLoader},
     Viz2DCanvas,
 };
