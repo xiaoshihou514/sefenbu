@@ -4,7 +4,10 @@ use bevy::{
     sprite::{AlphaMode2d, Material2d},
 };
 
-use super::{generic::Provider, oklab_common::{Hsv, Lab}};
+use super::{
+    generic::Provider,
+    oklab_common::{Hsv, Lab},
+};
 
 // global state
 #[derive(Resource)]
@@ -39,8 +42,8 @@ impl Provider for OkhsvProvider {
         // overflow protection
         self.viz2d_material.h = self.filter.h.min(360.);
     }
-    
-    fn convert(&self,pixel:&Oklaba) -> i64{
+
+    fn convert(&self, pixel: &Oklaba) -> i64 {
         let okhsv: Hsv = Hsv::from(&Lab {
             L: pixel.lightness,
             a: pixel.a,

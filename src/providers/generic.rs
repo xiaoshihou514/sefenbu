@@ -1,9 +1,9 @@
 use std::collections::BTreeMap;
 
 use bevy::prelude::*;
-pub trait Provider{
+pub trait Provider {
     // this function should return the value for histogram given a pixel
-    fn convert(&self,pixel:&Oklaba) -> i64;
+    fn convert(&self, pixel: &Oklaba) -> i64;
     // the max value for the key field
     fn max(&self) -> f32;
     // the min value for the key field
@@ -11,7 +11,6 @@ pub trait Provider{
     // the delta value for the provider
     fn delta(&self) -> f32;
     // perform changes onto the provider
-    // TODO: default impl
     fn incr(&mut self, change: f32);
     fn decr(&mut self, change: f32);
 

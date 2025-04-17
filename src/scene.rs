@@ -11,7 +11,10 @@ use bevy::{
 use crate::{
     cli::ProgOpt,
     controls::{ColorParam, KbdCooldown},
-    providers::{generic::Provider, okhsv::{Okhsv2DVizMaterial, OkhsvMaterial, OkhsvProvider}},
+    providers::{
+        generic::Provider,
+        okhsv::{Okhsv2DVizMaterial, OkhsvMaterial, OkhsvProvider},
+    },
 };
 
 #[derive(Component)]
