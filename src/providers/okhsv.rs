@@ -46,7 +46,8 @@ impl Provider for OkhsvProvider {
         self.viz3d_material.h = OKHSV_MAX.min(self.viz3d_material.h + change);
     }
 
-    fn convert(&self, pixel: &Oklaba) -> i64 {
+    fn convert(&self, p: Color) -> i64 {
+        let pixel: Oklaba = p.into();
         let okhsv: Hsv = Hsv::from(&Lab {
             L: pixel.lightness,
             a: pixel.a,
