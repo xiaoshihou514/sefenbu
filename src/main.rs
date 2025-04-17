@@ -6,7 +6,7 @@ mod scene;
 use bevy::{prelude::*, sprite::Material2dPlugin};
 use clap::Parser;
 use controls::*;
-use providers::okhsv::{Okhsv2DVizMaterial, OkhsvMaterial, OkhsvProvider};
+use providers::okhsv::{Okhsv2DVizMaterial, Okhsv3DVizMaterial, OkhsvMaterial, OkhsvProvider};
 use scene::*;
 
 fn main() {
@@ -38,9 +38,10 @@ fn main() {
             default_plugin,
             Material2dPlugin::<OkhsvMaterial>::default(),
             Material2dPlugin::<Okhsv2DVizMaterial>::default(),
+            MaterialPlugin::<Okhsv3DVizMaterial>::default(),
         ))
-        .add_systems(Startup, setup_scene)
-        .add_systems(Update, draw_image_await_load::<OkhsvProvider>)
+        .add_systems(Startup, setup_scene_pre)
+        .add_systems(Update, setup_scene::<OkhsvProvider>)
         .add_systems(Update, control_blob)
         .add_systems(Update, change_param)
         .add_systems(Update, set_viewports)

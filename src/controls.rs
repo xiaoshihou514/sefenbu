@@ -3,10 +3,10 @@ use bevy::{input::mouse::AccumulatedMouseMotion, prelude::*};
 use crate::{
     providers::{
         generic::Provider,
-        okhsv::{Okhsv2DVizMaterial, OkhsvMaterial, OkhsvProvider},
+        okhsv::{Okhsv2DVizMaterial, Okhsv3DVizMaterial, OkhsvMaterial, OkhsvProvider},
     },
     scene::{ImageCanvas, ImageLoader},
-    Viz2DCanvas,
+    Viz2DCanvas, Viz3DMesh,
 };
 
 #[derive(Component)]
@@ -73,8 +73,10 @@ pub fn change_param(
     mut p: ResMut<OkhsvProvider>,
     mut img_canvas: Query<(&mut MeshMaterial2d<OkhsvMaterial>, &ImageCanvas)>,
     mut viz2d_canvas: Query<(&mut MeshMaterial2d<Okhsv2DVizMaterial>, &Viz2DCanvas)>,
+    mut viz3d_mesh: Query<(&mut MeshMaterial3d<Okhsv3DVizMaterial>, &Viz3DMesh)>,
     mut img_filters: ResMut<Assets<OkhsvMaterial>>,
     mut viz2d_materials: ResMut<Assets<Okhsv2DVizMaterial>>,
+    mut viz3d_materials: ResMut<Assets<Okhsv3DVizMaterial>>,
     loader: Query<(Entity, &ImageLoader)>,
 ) {
     if !param.cooldown.finished(time) || !loader.is_empty() {
@@ -100,6 +102,7 @@ pub fn change_param(
     // apply change, original material substituted
     if p.is_changed() {
         img_canvas.single_mut().0 .0 = img_filters.add(p.filter.clone());
-        viz2d_canvas.single_mut().0 .0 = viz2d_materials.add(p.viz2d_material.clone())
+        viz2d_canvas.single_mut().0 .0 = viz2d_materials.add(p.viz2d_material.clone());
+        viz3d_mesh.single_mut().0 .0 = viz3d_materials.add(p.viz3d_material.clone());
     }
 }

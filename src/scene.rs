@@ -13,18 +13,19 @@ use crate::{
     controls::{ColorParam, KbdCooldown},
     providers::{
         generic::Provider,
-        okhsv::{Okhsv2DVizMaterial, OkhsvMaterial, OkhsvProvider},
+        okhsv::{Okhsv2DVizMaterial, Okhsv3DVizMaterial, OkhsvMaterial, OkhsvProvider},
     },
 };
 
 #[derive(Component)]
-pub struct ImageLoader(pub Handle<Image>);
-
-#[derive(Component)]
 pub struct ImageCanvas;
-
 #[derive(Component)]
 pub struct Viz2DCanvas;
+#[derive(Component)]
+pub struct Viz3DMesh;
+
+#[derive(Component)]
+pub struct ImageLoader(pub Handle<Image>);
 
 #[derive(Component)]
 pub enum CamViewPort {
@@ -33,16 +34,18 @@ pub enum CamViewPort {
     ColorTunnel,
 }
 
-pub fn setup_scene(mut commands: Commands, asset_server: Res<AssetServer>, opts: Res<ProgOpt>) {
+pub fn setup_scene_pre(mut commands: Commands, asset_server: Res<AssetServer>, opts: Res<ProgOpt>) {
     // defer drawing of image
     let img_handle: Handle<Image> = asset_server.load(&opts.file);
     // associate the handle with an entity
     commands.spawn(ImageLoader(img_handle.clone()));
 
+    // TODO: generate from progopt
     // create the global image filter shader
     let p = OkhsvProvider {
         filter: OkhsvMaterial::new(360., img_handle.clone()),
-        viz2d_material: Okhsv2DVizMaterial::new(360., img_handle),
+        viz2d_material: Okhsv2DVizMaterial::new(360.),
+        viz3d_material: Okhsv3DVizMaterial::new(360.),
     };
 
     // create the controls, consisting of the keybind timeout timer and the current value of the
@@ -58,8 +61,9 @@ pub fn setup_scene(mut commands: Commands, asset_server: Res<AssetServer>, opts:
 const IMG_BASE_SIZE: f32 = 1080. * 4. / 5.;
 const COLOR_2D_VIZ_COORD: Vec3 = Vec3::new(2000., 0., 0.);
 const COLOR_2D_VIZ_SIZE: f32 = 300.;
+pub const COLOR_3D_VIZ_COORD: Vec3 = Vec3::new(-2000., 0., 0.);
 
-pub fn draw_image_await_load<A>(
+pub fn setup_scene<A>(
     mut commands: Commands,
     provider: Res<A>,
     asset_server: Res<AssetServer>,
@@ -70,6 +74,7 @@ pub fn draw_image_await_load<A>(
     filter: Res<OkhsvProvider>,
     image_filters: ResMut<Assets<OkhsvMaterial>>,
     mut viz2d_materials: ResMut<Assets<Okhsv2DVizMaterial>>,
+    mut viz3d_materials: ResMut<Assets<Okhsv3DVizMaterial>>,
     color_materials: ResMut<Assets<ColorMaterial>>,
 ) where
     A: Provider + Resource,
@@ -90,11 +95,35 @@ pub fn draw_image_await_load<A>(
         spawn_image(image, &mut commands, &mut meshes, &filter, image_filters);
 
         // display 2d viz
-        spawn_2dviz_square(&mut commands, &mut meshes, &mut viz2d_materials, &filter);
+        spawn_2dviz_square(&mut commands, &mut meshes, &mut viz2d_materials);
 
         // spawn rectangles that would generate the histogram shape
         // by covering extra parts
-        spawn_histogram_covering(provider, image, commands, meshes, color_materials);
+        spawn_histogram_covering(provider, image, &mut commands, &mut meshes, color_materials);
+
+        commands.spawn((
+            (
+                // TODO: change to custom mesh
+                Mesh3d(meshes.add(Cuboid::default())),
+                MeshMaterial3d(viz3d_materials.add(filter.viz3d_material.clone())),
+                Transform::from_translation(COLOR_3D_VIZ_COORD),
+            ),
+            Viz3DMesh,
+        ));
+
+        // camera
+        commands.spawn((
+            (
+                Camera3d::default(),
+                Camera {
+                    order: 3,
+                    ..default()
+                },
+                Transform::from_translation(COLOR_3D_VIZ_COORD + Vec3::new(-2., 2., -2.))
+                    .looking_at(COLOR_3D_VIZ_COORD, Vec3::Y),
+            ),
+            CamViewPort::ColorTunnel,
+        ));
     }
 }
 
@@ -118,7 +147,7 @@ fn spawn_image(
     let aspect_ratio =
         image.texture_descriptor.size.width as f32 / image.texture_descriptor.size.height as f32;
 
-    // spawn a cube the has the right dimensions and use the image as material
+    // spawn a square the has the right dimensions and use the image as material
     commands.spawn((
         (
             Mesh2d(meshes.add(Rectangle::new(IMG_BASE_SIZE * aspect_ratio, IMG_BASE_SIZE))),
@@ -144,16 +173,12 @@ fn spawn_2dviz_square(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
     viz2d_materials: &mut ResMut<Assets<Okhsv2DVizMaterial>>,
-    filter: &Res<OkhsvProvider>,
 ) {
     // Spawn corresponding 2d color distribution
     commands.spawn((
         (
             Mesh2d(meshes.add(Mesh::from(Rectangle::default()))),
-            MeshMaterial2d(viz2d_materials.add(Okhsv2DVizMaterial::new(
-                360.,
-                filter.filter.color_texture.clone(),
-            ))),
+            MeshMaterial2d(viz2d_materials.add(Okhsv2DVizMaterial::new(360.))),
             Transform::from_translation(COLOR_2D_VIZ_COORD)
                 .with_scale(Vec3::splat(COLOR_2D_VIZ_SIZE)),
         ),
@@ -177,8 +202,8 @@ fn spawn_2dviz_square(
 fn spawn_histogram_covering<A>(
     provider: Res<A>,
     image: &Image,
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
+    commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
     mut color_materials: ResMut<Assets<ColorMaterial>>,
 ) where
     A: Provider + Resource,
