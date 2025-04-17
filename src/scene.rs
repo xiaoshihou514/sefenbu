@@ -68,7 +68,7 @@ pub fn draw_image_await_load<A>(
     query: Query<(Entity, &ImageLoader)>,
     _opts: ResMut<ProgOpt>,
     filter: Res<OkhsvProvider>,
-    mut image_filters: ResMut<Assets<OkhsvMaterial>>,
+    image_filters: ResMut<Assets<OkhsvMaterial>>,
     mut viz2d_materials: ResMut<Assets<Okhsv2DVizMaterial>>,
     color_materials: ResMut<Assets<ColorMaterial>>,
 ) where
@@ -83,73 +83,95 @@ pub fn draw_image_await_load<A>(
     let load_state = asset_server.get_load_state(&loader.0);
 
     if let (Some(LoadState::Loaded), Some(image)) = (load_state, images.get_mut(&loader.0)) {
-        // don't downscale the image
-        image.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
-            address_mode_u: AddressMode::ClampToEdge.into(),
-            address_mode_v: AddressMode::ClampToEdge.into(),
-            mag_filter: FilterMode::Linear.into(),
-            min_filter: FilterMode::Linear.into(),
-            mipmap_filter: FilterMode::Linear.into(),
-            ..default()
-        });
-
-        let aspect_ratio = image.texture_descriptor.size.width as f32
-            / image.texture_descriptor.size.height as f32;
-
-        // spawn a cube the has the right dimensions and use the image as material
-        commands.spawn((
-            (
-                Mesh2d(meshes.add(Rectangle::new(IMG_BASE_SIZE * aspect_ratio, IMG_BASE_SIZE))),
-                MeshMaterial2d(image_filters.add(filter.filter.clone())),
-            ),
-            ImageCanvas,
-        ));
-
-        // camera
-        commands.spawn((
-            (
-                Camera2d,
-                Camera {
-                    order: 1,
-                    ..default()
-                },
-            ),
-            CamViewPort::ImageFilter,
-        ));
-
+        // delete marker entity
         commands.entity(entity).despawn();
 
-        // Spawn corresponding 2d color distribution
-        commands.spawn((
-            (
-                Mesh2d(meshes.add(Mesh::from(Rectangle::default()))),
-                MeshMaterial2d(viz2d_materials.add(Okhsv2DVizMaterial::new(
-                    360.,
-                    filter.filter.color_texture.clone(),
-                ))),
-                Transform::from_translation(COLOR_2D_VIZ_COORD)
-                    .with_scale(Vec3::splat(COLOR_2D_VIZ_SIZE)),
-            ),
-            Viz2DCanvas,
-        ));
+        // display image
+        spawn_image(image, &mut commands, &mut meshes, &filter, image_filters);
 
-        // Spawn camera to show the 2d color distribution
-        commands.spawn((
-            (
-                Camera2d,
-                Transform::from_translation(COLOR_2D_VIZ_COORD),
-                Camera {
-                    order: 2,
-                    ..default()
-                },
-            ),
-            CamViewPort::ColorDistribution,
-        ));
+        // display 2d viz
+        spawn_2dviz_square(&mut commands, &mut meshes, &mut viz2d_materials, &filter);
 
         // spawn rectangles that would generate the histogram shape
         // by covering extra parts
         spawn_histogram_covering(provider, image, commands, meshes, color_materials);
     }
+}
+
+fn spawn_image(
+    image: &mut Image,
+    commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    filter: &Res<OkhsvProvider>,
+    mut image_filters: ResMut<Assets<OkhsvMaterial>>,
+) {
+    // don't downscale the image
+    image.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
+        address_mode_u: AddressMode::ClampToEdge.into(),
+        address_mode_v: AddressMode::ClampToEdge.into(),
+        mag_filter: FilterMode::Linear.into(),
+        min_filter: FilterMode::Linear.into(),
+        mipmap_filter: FilterMode::Linear.into(),
+        ..default()
+    });
+
+    let aspect_ratio =
+        image.texture_descriptor.size.width as f32 / image.texture_descriptor.size.height as f32;
+
+    // spawn a cube the has the right dimensions and use the image as material
+    commands.spawn((
+        (
+            Mesh2d(meshes.add(Rectangle::new(IMG_BASE_SIZE * aspect_ratio, IMG_BASE_SIZE))),
+            MeshMaterial2d(image_filters.add(filter.filter.clone())),
+        ),
+        ImageCanvas,
+    ));
+
+    // camera
+    commands.spawn((
+        (
+            Camera2d,
+            Camera {
+                order: 1,
+                ..default()
+            },
+        ),
+        CamViewPort::ImageFilter,
+    ));
+}
+
+fn spawn_2dviz_square(
+    commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    viz2d_materials: &mut ResMut<Assets<Okhsv2DVizMaterial>>,
+    filter: &Res<OkhsvProvider>,
+) {
+    // Spawn corresponding 2d color distribution
+    commands.spawn((
+        (
+            Mesh2d(meshes.add(Mesh::from(Rectangle::default()))),
+            MeshMaterial2d(viz2d_materials.add(Okhsv2DVizMaterial::new(
+                360.,
+                filter.filter.color_texture.clone(),
+            ))),
+            Transform::from_translation(COLOR_2D_VIZ_COORD)
+                .with_scale(Vec3::splat(COLOR_2D_VIZ_SIZE)),
+        ),
+        Viz2DCanvas,
+    ));
+
+    // Spawn camera to show the 2d color distribution
+    commands.spawn((
+        (
+            Camera2d,
+            Transform::from_translation(COLOR_2D_VIZ_COORD),
+            Camera {
+                order: 2,
+                ..default()
+            },
+        ),
+        CamViewPort::ColorDistribution,
+    ));
 }
 
 fn spawn_histogram_covering<A>(

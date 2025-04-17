@@ -14,6 +14,7 @@ use super::{
 pub struct OkhsvProvider {
     pub filter: OkhsvMaterial,
     pub viz2d_material: Okhsv2DVizMaterial,
+    // pub viz3d_material: Okhsv3DVizMaterial,
 }
 
 const OKHSV_DELTA: f32 = 2.;
