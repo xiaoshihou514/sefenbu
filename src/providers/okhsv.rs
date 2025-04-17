@@ -29,6 +29,8 @@ impl Provider for OkhsvProvider {
     fn min(&self) -> f32 { OKHSV_MIN }
     #[rustfmt::skip]
     fn delta(&self) -> f32 { OKHSV_DELTA }
+    #[rustfmt::skip]
+    fn current(&self) -> f32 { self.filter.h }
 
     fn decr(&mut self, change: f32) {
         // overflow protection

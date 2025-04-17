@@ -97,6 +97,7 @@ pub fn change_param(
     mut viz2d_materials: ResMut<Assets<Okhsv2DVizMaterial>>,
     mut viz3d_materials: ResMut<Assets<Okhsv3DVizMaterial>>,
     loader: Query<(Entity, &ImageLoader)>,
+    mut text: Query<&mut Text2d>,
 ) {
     if !param.cooldown.finished(time) || !loader.is_empty() {
         return;
@@ -123,5 +124,6 @@ pub fn change_param(
         img_canvas.single_mut().0 .0 = img_filters.add(p.filter.clone());
         viz2d_canvas.single_mut().0 .0 = viz2d_materials.add(p.viz2d_material.clone());
         viz3d_mesh.single_mut().0 .0 = viz3d_materials.add(p.viz3d_material.clone());
+        text.single_mut().0 = String::from(format!("{}", p.current()));
     }
 }

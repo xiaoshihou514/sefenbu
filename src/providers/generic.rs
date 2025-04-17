@@ -13,6 +13,8 @@ pub trait Provider {
     // perform changes onto the provider
     fn incr(&mut self, change: f32);
     fn decr(&mut self, change: f32);
+    // give current value
+    fn current(&self) -> f32;
 
     fn histogram_data(&self, img: &Image) -> Vec<(f32, f32)> {
         let mut result: BTreeMap<i64, i64> = BTreeMap::new();

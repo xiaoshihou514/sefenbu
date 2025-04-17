@@ -66,7 +66,7 @@ pub const COLOR_3D_VIZ_COORD: Vec3 = Vec3::new(-2000., 0., 0.);
 
 pub fn setup_scene<A>(
     mut commands: Commands,
-    provider: Res<A>,
+    mut provider: Res<A>,
     asset_server: Res<AssetServer>,
     mut images: ResMut<Assets<Image>>,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -100,7 +100,20 @@ pub fn setup_scene<A>(
 
         // spawn rectangles that would generate the histogram shape
         // by covering extra parts
-        spawn_histogram_covering(provider, image, &mut commands, &mut meshes, color_materials);
+        spawn_histogram_covering(
+            &mut provider,
+            image,
+            &mut commands,
+            &mut meshes,
+            color_materials,
+        );
+
+        commands.spawn((
+            Text2d::new(format!("{}", provider.current())),
+            Transform::from_translation(
+                COLOR_2D_VIZ_COORD + Vec3::new(0., -COLOR_2D_VIZ_SIZE * 0.6, 2.),
+            ),
+        ));
 
         commands.spawn((
             (
@@ -201,7 +214,7 @@ fn spawn_2dviz_square(
 }
 
 fn spawn_histogram_covering<A>(
-    provider: Res<A>,
+    provider: &mut Res<A>,
     image: &Image,
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
