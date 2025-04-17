@@ -22,15 +22,15 @@ pub struct KbdCooldown(pub Timer);
 const KBD_COOLDOWN_SECS: f32 = 0.15;
 impl Default for KbdCooldown {
     fn default() -> Self {
-        return KbdCooldown(Timer::from_seconds(KBD_COOLDOWN_SECS, TimerMode::Once));
+        KbdCooldown(Timer::from_seconds(KBD_COOLDOWN_SECS, TimerMode::Once))
     }
 }
 impl KbdCooldown {
-    fn finished(self: &mut Self, time: Res<Time>) -> bool {
-        return self.0.tick(time.delta()).finished();
+    fn finished(&mut self, time: Res<Time>) -> bool {
+        self.0.tick(time.delta()).finished()
     }
 
-    fn reset(self: &mut Self) {
+    fn reset(&mut self) {
         self.0.reset();
     }
 }

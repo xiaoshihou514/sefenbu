@@ -67,12 +67,12 @@ pub struct OkhsvMaterial {
 
 impl OkhsvMaterial {
     pub fn new(h: f32, image: Handle<Image>) -> OkhsvMaterial {
-        return OkhsvMaterial {
+        OkhsvMaterial {
             h,
             delta: OKHSV_DELTA,
             color_texture: image,
             _alpha_mode: AlphaMode2d::Blend,
-        };
+        }
     }
 }
 
@@ -100,12 +100,12 @@ pub struct Okhsv2DVizMaterial {
 
 impl Okhsv2DVizMaterial {
     pub fn new(h: f32, image: Handle<Image>) -> Okhsv2DVizMaterial {
-        return Okhsv2DVizMaterial {
+        Okhsv2DVizMaterial {
             h,
             delta: OKHSV_DELTA,
             color_texture: image,
             _alpha_mode: AlphaMode2d::Blend,
-        };
+        }
     }
 }
 

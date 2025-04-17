@@ -59,9 +59,9 @@ const IMG_BASE_SIZE: f32 = 1080. * 4. / 5.;
 const COLOR_2D_VIZ_COORD: Vec3 = Vec3::new(2000., 0., 0.);
 const COLOR_2D_VIZ_SIZE: f32 = 300.;
 
-pub fn draw_image_await_load(
+pub fn draw_image_await_load<A>(
     mut commands: Commands,
-    provider: Res<OkhsvProvider>,
+    provider: Res<A>,
     asset_server: Res<AssetServer>,
     mut images: ResMut<Assets<Image>>,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -70,8 +70,10 @@ pub fn draw_image_await_load(
     filter: Res<OkhsvProvider>,
     mut image_filters: ResMut<Assets<OkhsvMaterial>>,
     mut viz2d_materials: ResMut<Assets<Okhsv2DVizMaterial>>,
-    mut color_materials: ResMut<Assets<ColorMaterial>>,
-) {
+    color_materials: ResMut<Assets<ColorMaterial>>,
+) where
+    A: Provider + Resource,
+{
     if query.is_empty() {
         // image already loaded
         return;
@@ -80,98 +82,110 @@ pub fn draw_image_await_load(
     let (entity, loader) = query.single();
     let load_state = asset_server.get_load_state(&loader.0);
 
-    match (load_state, images.get_mut(&loader.0)) {
-        (Some(LoadState::Loaded), Some(image)) => {
-            // don't downscale the image
-            image.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
-                address_mode_u: AddressMode::ClampToEdge.into(),
-                address_mode_v: AddressMode::ClampToEdge.into(),
-                mag_filter: FilterMode::Linear.into(),
-                min_filter: FilterMode::Linear.into(),
-                mipmap_filter: FilterMode::Linear.into(),
-                ..default()
-            });
+    if let (Some(LoadState::Loaded), Some(image)) = (load_state, images.get_mut(&loader.0)) {
+        // don't downscale the image
+        image.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
+            address_mode_u: AddressMode::ClampToEdge.into(),
+            address_mode_v: AddressMode::ClampToEdge.into(),
+            mag_filter: FilterMode::Linear.into(),
+            min_filter: FilterMode::Linear.into(),
+            mipmap_filter: FilterMode::Linear.into(),
+            ..default()
+        });
 
-            let aspect_ratio = image.texture_descriptor.size.width as f32
-                / image.texture_descriptor.size.height as f32;
+        let aspect_ratio = image.texture_descriptor.size.width as f32
+            / image.texture_descriptor.size.height as f32;
 
-            // spawn a cube the has the right dimensions and use the image as material
-            commands.spawn((
-                (
-                    Mesh2d(meshes.add(Rectangle::new(IMG_BASE_SIZE * aspect_ratio, IMG_BASE_SIZE))),
-                    MeshMaterial2d(image_filters.add(filter.filter.clone())),
-                ),
-                ImageCanvas,
-            ));
+        // spawn a cube the has the right dimensions and use the image as material
+        commands.spawn((
+            (
+                Mesh2d(meshes.add(Rectangle::new(IMG_BASE_SIZE * aspect_ratio, IMG_BASE_SIZE))),
+                MeshMaterial2d(image_filters.add(filter.filter.clone())),
+            ),
+            ImageCanvas,
+        ));
 
-            // camera
-            commands.spawn((
-                (
-                    Camera2d,
-                    Camera {
-                        order: 1,
-                        ..default()
-                    },
-                ),
-                CamViewPort::ImageFilter,
-            ));
+        // camera
+        commands.spawn((
+            (
+                Camera2d,
+                Camera {
+                    order: 1,
+                    ..default()
+                },
+            ),
+            CamViewPort::ImageFilter,
+        ));
 
-            commands.entity(entity).despawn();
+        commands.entity(entity).despawn();
 
-            // Spawn corresponding 2d color distribution
-            commands.spawn((
-                (
-                    Mesh2d(meshes.add(Mesh::from(Rectangle::default()))),
-                    MeshMaterial2d(viz2d_materials.add(Okhsv2DVizMaterial::new(
-                        360.,
-                        filter.filter.color_texture.clone(),
-                    ))),
-                    Transform::from_translation(COLOR_2D_VIZ_COORD)
-                        .with_scale(Vec3::splat(COLOR_2D_VIZ_SIZE)),
-                ),
-                Viz2DCanvas,
-            ));
+        // Spawn corresponding 2d color distribution
+        commands.spawn((
+            (
+                Mesh2d(meshes.add(Mesh::from(Rectangle::default()))),
+                MeshMaterial2d(viz2d_materials.add(Okhsv2DVizMaterial::new(
+                    360.,
+                    filter.filter.color_texture.clone(),
+                ))),
+                Transform::from_translation(COLOR_2D_VIZ_COORD)
+                    .with_scale(Vec3::splat(COLOR_2D_VIZ_SIZE)),
+            ),
+            Viz2DCanvas,
+        ));
 
-            // Spawn camera to show the 2d color distribution
-            commands.spawn((
-                (
-                    Camera2d,
-                    Transform::from_translation(COLOR_2D_VIZ_COORD),
-                    Camera {
-                        order: 2,
-                        ..default()
-                    },
-                ),
-                CamViewPort::ColorDistribution,
-            ));
+        // Spawn camera to show the 2d color distribution
+        commands.spawn((
+            (
+                Camera2d,
+                Transform::from_translation(COLOR_2D_VIZ_COORD),
+                Camera {
+                    order: 2,
+                    ..default()
+                },
+            ),
+            CamViewPort::ColorDistribution,
+        ));
 
-            // spawn rectangles that would generate the histogram shape
-            // by covering extra parts
-            let mut data = provider.histogram_data(image);
-            // normalize
-            let max = data
-                .iter()
-                .max_by(|x, y| x.1.partial_cmp(&y.1).unwrap())
-                .unwrap()
-                .1;
-            data.iter_mut().for_each(|(_, y)| *y /= max);
+        // spawn rectangles that would generate the histogram shape
+        // by covering extra parts
+        spawn_histogram_covering(provider, image, commands, meshes, color_materials);
+    }
+}
 
-            let mut x = provider.min();
-            let mut iter = data.iter().peekable();
-            while x < provider.max() {
-                // data is in ascending order, so just iter through
-                let ratio = match iter.peek() {
-                    Some((y, z)) => {
-                        if *y == x {
-                            iter.next();
-                            *z
-                        } else {
-                            0.
-                        }
-                    }
-                    None => 0.,
-                };
-                commands.spawn((
+fn spawn_histogram_covering<A>(
+    provider: Res<A>,
+    image: &Image,
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut color_materials: ResMut<Assets<ColorMaterial>>,
+) where
+    A: Provider + Resource,
+{
+    let mut data = provider.histogram_data(image);
+    // normalize
+    let max = data
+        .iter()
+        .max_by(|x, y| x.1.partial_cmp(&y.1).unwrap())
+        .unwrap()
+        .1;
+    data.iter_mut().for_each(|(_, y)| *y /= max);
+
+    let mut x = provider.min();
+    let mut iter = data.iter().peekable();
+    while x < provider.max() {
+        // data is in ascending order, so just iter through
+        let ratio = match iter.peek() {
+            Some((y, z)) => {
+                if *y == x {
+                    iter.next();
+                    *z
+                } else {
+                    0.
+                }
+            }
+            None => 0.,
+        };
+        commands.spawn((
                     Mesh2d(meshes.add(Mesh::from(Rectangle::new(
                         provider.delta() / provider.max(),
                         1. - ratio,
@@ -189,10 +203,7 @@ pub fn draw_image_await_load(
                     )
                     .with_scale(Vec3::splat(COLOR_2D_VIZ_SIZE)),
                 ));
-                x += provider.delta();
-            }
-        }
-        _ => (),
+        x += provider.delta();
     }
 }
 
