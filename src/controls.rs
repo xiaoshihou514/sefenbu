@@ -6,11 +6,29 @@ use crate::{
         okhsv::{Okhsv2DVizMaterial, Okhsv3DVizMaterial, OkhsvMaterial, OkhsvProvider},
     },
     scene::{ImageCanvas, ImageLoader},
-    Viz2DCanvas, Viz3DMesh,
+    Viz2DCanvas, Viz3DMesh, COLOR_3D_VIZ_COORD,
 };
 
 #[derive(Component)]
-pub struct MeshController(pub Vec2);
+pub struct MeshControlConf {
+    pub v_pitch: f32,
+    pub v_yaw: f32,
+    pub orbit_distance: f32,
+    pub pitch_max: f32,
+    pub pitch_min: f32,
+}
+impl Default for MeshControlConf {
+    fn default() -> Self {
+        MeshControlConf {
+            v_pitch: 0.01,
+            v_yaw: 0.01,
+            // 2 * sqrt(3)
+            orbit_distance: 3.4641016151377544,
+            pitch_max: 0.3,
+            pitch_min: -0.8,
+        }
+    }
+}
 
 #[derive(Resource)]
 pub struct ColorParam {
@@ -35,14 +53,14 @@ impl KbdCooldown {
     }
 }
 
-// https://bevyengine.org/examples/camera/first-person-view-model/
+// https://bevyengine.org/examples/camera/camera-orbit/
 pub fn control_blob(
     // initialized when setting up scene
-    mut blob: Query<(&mut Transform, &MeshController)>,
+    mut blob: Query<(&mut Transform, &MeshControlConf)>,
     mouse: Res<ButtonInput<MouseButton>>,
     accumulated_mouse_motion: Res<AccumulatedMouseMotion>,
 ) {
-    let Ok((mut transform, sensitivity)) = blob.get_single_mut() else {
+    let Ok((mut transform, conf)) = blob.get_single_mut() else {
         return;
     };
 
@@ -52,17 +70,18 @@ pub fn control_blob(
     }
 
     if mouse.pressed(MouseButton::Left) {
-        // magic code that converts 2d rotation to 3d roration
-        let delta_yaw = delta.x * sensitivity.0.x;
-        let (yaw, _, roll) = transform.rotation.to_euler(EulerRot::YXZ);
+        // 3d polar coordinate
+        let (mut yaw, mut pitch, roll) = transform.rotation.to_euler(EulerRot::YXZ);
+        yaw -= delta.x * conf.v_yaw;
+        pitch = (pitch - delta.y * conf.v_pitch).clamp(conf.pitch_min, conf.pitch_max);
 
-        // only horizontal rotation
-        transform.rotation = Quat::from_euler(EulerRot::YXZ, yaw + delta_yaw, 0.0, roll);
-    }
+        transform.rotation = Quat::from_euler(EulerRot::YXZ, yaw, pitch, roll);
 
-    if mouse.pressed(MouseButton::Middle) {
-        transform.translation +=
-            Vec3::new(delta.x * sensitivity.0.x, -delta.y * sensitivity.0.y, 0.0)
+        // Adjust the translation to maintain the correct orientation toward the orbit target.
+        transform.translation = Transform::from_translation(
+            COLOR_3D_VIZ_COORD - transform.forward() * conf.orbit_distance,
+        )
+        .translation;
     }
 }
 

@@ -15,6 +15,7 @@ use crate::{
         generic::Provider,
         okhsv::{Okhsv2DVizMaterial, Okhsv3DVizMaterial, OkhsvMaterial, OkhsvProvider},
     },
+    MeshControlConf,
 };
 
 #[derive(Component)]
@@ -122,7 +123,7 @@ pub fn setup_scene<A>(
                 Transform::from_translation(COLOR_3D_VIZ_COORD + Vec3::new(-2., 2., -2.))
                     .looking_at(COLOR_3D_VIZ_COORD, Vec3::Y),
             ),
-            CamViewPort::ColorTunnel,
+            (CamViewPort::ColorTunnel, MeshControlConf::default()),
         ));
     }
 }
