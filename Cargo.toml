@@ -2,6 +2,11 @@
 name = "sefenbu"
 version = "0.1.0"
 edition = "2024"
+license = "GPL-3.0"
+description = "Visualizes OKHSV color distribution for an image."
+homepage = "https://github.com/xiaoshihou514/sefenbu"
+repository = "https://github.com/xiaoshihou514/sefenbu"
+readme = "README.md"
 
 [dependencies]
 bevy = { version = "0.15.2", features = [
