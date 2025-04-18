@@ -5,7 +5,7 @@ use bevy::{
     prelude::*,
     render::{
         mesh::{Indices, PrimitiveTopology},
-        render_resource::{encase::rts_array::Length, AsBindGroup, ShaderRef},
+        render_resource::{AsBindGroup, ShaderRef},
     },
     sprite::{AlphaMode2d, Material2d},
 };
@@ -38,11 +38,11 @@ const OKHSV_H_DELTA: f32 = 2.;
 const OKHSV_H_MAX: f32 = 360.;
 const OKHSV_H_MIN: f32 = 0.;
 const OKHSV_SV_MAX: f32 = 100.;
-const OKHSV_SV_DELTA: f32 = 4.;
-const OKHSV_SV_DELTA_I: i64 = OKHSV_SV_DELTA as i64;
-const OKHSV_SV_DELTA_N: f32 = OKHSV_SV_DELTA / OKHSV_SV_MAX;
+const OKHSV_SV_DELTA: f32 = 2.;
+const OKHSV_SV_DELTAI: i64 = OKHSV_SV_DELTA as i64;
+const OKHSV_SV_DELTA_N: f32 = 1. / OKHSV_SV_MAX;
 const OKHSV_SV_SQ_SZ: f32 = OKHSV_SV_DELTA / OKHSV_SV_MAX * OKHSV_SV_DELTA;
-const OKHSV_SV_STEPS: i64 = OKHSV_SV_MAX as i64 / OKHSV_SV_DELTA as i64;
+const OKHSV_SV_MAXI: i64 = OKHSV_SV_MAX as i64;
 impl Provider for OkhsvProvider {
     #[rustfmt::skip]
     fn max(&self) -> f32 { OKHSV_H_MAX }
@@ -67,6 +67,13 @@ impl Provider for OkhsvProvider {
         self.viz3d_material.h = OKHSV_H_MAX.min(self.viz3d_material.h + change);
     }
 
+    fn set(&mut self, new: f32) {
+        let new_adjusted = new * OKHSV_H_MAX;
+        self.filter.h = new_adjusted;
+        self.viz2d_material.h = new_adjusted;
+        self.viz3d_material.h = new_adjusted;
+    }
+
     fn convert(&self, c: Color) -> i64 {
         let okhsv: Hsv = to_okhsv(c);
         (okhsv.h * OKHSV_H_MAX / OKHSV_H_DELTA) as i64 * (OKHSV_H_DELTA as i64)
@@ -78,6 +85,7 @@ impl Provider for OkhsvProvider {
         let w = img.width();
         let h = img.height();
         let current = self.current();
+        let mut temp = 0;
         // this look takes the most time
         for i in 0..w {
             for j in 0..h {
@@ -89,6 +97,10 @@ impl Provider for OkhsvProvider {
                         (okhsv.v * OKHSV_SV_MAX / OKHSV_SV_DELTA) as i64 * (OKHSV_SV_DELTA as i64),
                     );
 
+                    if key == (2, 84) {
+                        temp += 1;
+                        if temp % 10000 == 0 {}
+                    }
                     stats.insert(key, stats.get(&key).map(|i| i.to_owned() + 1).unwrap_or(1));
                 }
             }
@@ -99,14 +111,19 @@ impl Provider for OkhsvProvider {
         let mut vtxs: Vec<[f32; 3]> = vec![];
         let mut indices: Vec<u32> = vec![];
         let (mut i, mut j, mut k) = (0, 0, 0);
+        // info!("recorded: {:?}", stats.keys().cloned().collect::<Vec<_>>());
 
         // add mesh vertexes and indices
-        while i < OKHSV_SV_STEPS {
-            while j < OKHSV_SV_STEPS {
+        while i <= OKHSV_SV_MAXI {
+            while j <= OKHSV_SV_MAXI {
                 // draw cube
                 let base_x = i as f32 * OKHSV_SV_DELTA_N;
                 let base_z = j as f32 * OKHSV_SV_DELTA_N;
-                let y = *stats.get(&(i, j)).unwrap_or(&0) as f32 / max;
+                let y = *stats
+                    .get(&(i * OKHSV_SV_DELTAI, j * OKHSV_SV_DELTAI))
+                    .unwrap_or(&0) as f32
+                    / max;
+                // info!("queried: {:?}", (i * OKHSV_SV_DELTAI, j * OKHSV_SV_DELTAI));
                 // top 4
                 let mut top_vtxs = vec![
                     [base_x - 0.5, y, base_z - 0.5],
@@ -149,10 +166,10 @@ impl Provider for OkhsvProvider {
                 indices.append(&mut vec![k + 6, k + 2, k + 0]);
 
                 k += 8;
-                j += OKHSV_SV_DELTA_I;
+                j += OKHSV_SV_DELTAI;
             }
             j = 0;
-            i += OKHSV_SV_DELTA_I;
+            i += OKHSV_SV_DELTAI;
         }
 
         Mesh::new(

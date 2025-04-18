@@ -16,7 +16,7 @@ fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     pos.y -= bottom.y;
     pos.z -= bottom.z;
 
-    let okhsv: HSV = HSV(h / 360., pos.x, pos.z);
+    let okhsv: HSV = HSV(h / 360., 1 - pos.x, pos.z);
     let rgb: RGB = okhsv_to_srgb(okhsv);
 
     return vec4<f32>(rgb.r, rgb.g, rgb.b, 1.);

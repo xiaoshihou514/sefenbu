@@ -14,6 +14,8 @@ pub trait Provider {
     fn incr(&mut self, change: f32);
     /// perform changes onto the provider
     fn decr(&mut self, change: f32);
+    /// set new param (unadjusted), [0,1]
+    fn set(&mut self, new: f32);
     /// give current value
     fn current(&self) -> f32;
     /// draw 3d viz mesh

@@ -6,7 +6,7 @@ use crate::{
         okhsv::{Okhsv2DVizMaterial, Okhsv3DVizMaterial, OkhsvMaterial, OkhsvProvider},
     },
     scene::{ImageCanvas, ImageLoader},
-    Background, Viz2DCanvas, Viz3DMesh, COLOR_3D_VIZ_COORD,
+    Background, Viz2DCanvas, Viz3DMesh, COLOR_3D_VIZ_COORD, IMG_VIEW_W_RATIO, VIZ3D_H_RATIO,
 };
 
 #[derive(Component)]
@@ -57,6 +57,7 @@ impl KbdCooldown {
 pub fn control_blob(
     // initialized when setting up scene
     mut blob: Query<(&mut Transform, &MeshControlConf)>,
+    window: Single<&Window>,
     mouse: Res<ButtonInput<MouseButton>>,
     accumulated_mouse_motion: Res<AccumulatedMouseMotion>,
 ) {
@@ -69,7 +70,13 @@ pub fn control_blob(
         return;
     }
 
-    if mouse.pressed(MouseButton::Left) {
+    let size = window.size();
+    let pos = window.cursor_position().unwrap();
+    let x_threshold = size.x as f32 * IMG_VIEW_W_RATIO;
+    let y_threshold = size.y as f32 * VIZ3D_H_RATIO;
+
+    // check in bound
+    if mouse.pressed(MouseButton::Left) && pos.x > x_threshold && pos.y < y_threshold {
         // 3d polar coordinate
         let (mut yaw, mut pitch, roll) = transform.rotation.to_euler(EulerRot::YXZ);
         yaw -= delta.x * conf.v_yaw;
@@ -87,6 +94,8 @@ pub fn control_blob(
 
 pub fn change_param(
     keyboard: Res<ButtonInput<KeyCode>>,
+    mouse: Res<ButtonInput<MouseButton>>,
+    window: Single<&Window>,
     mut param: ResMut<ColorParam>,
     time: Res<Time>,
     mut p: ResMut<OkhsvProvider>,
@@ -108,6 +117,18 @@ pub fn change_param(
 ) {
     if !param.cooldown.finished(time) || !loader.is_empty() || img.is_none() {
         return;
+    }
+
+    // response to clicks on viz2d
+    if mouse.just_pressed(MouseButton::Left) {
+        let size = window.size();
+        let pos = window.cursor_position().unwrap();
+        let x_threshold = size.x as f32 * IMG_VIEW_W_RATIO;
+        let y_threshold = size.y as f32 * VIZ3D_H_RATIO;
+
+        if pos.x > x_threshold && pos.y > y_threshold {
+            p.set((pos.x - x_threshold) as f32 / (size.x as f32 - x_threshold));
+        }
     }
 
     let change = if keyboard.pressed(KeyCode::ShiftLeft) {

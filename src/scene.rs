@@ -33,8 +33,8 @@ pub struct Background(pub Image);
 #[derive(Component)]
 pub enum CamViewPort {
     ImageFilter,
-    ColorDistribution,
-    ColorTunnel,
+    Viz2d,
+    Viz3d,
 }
 
 pub fn setup_scene_pre(mut commands: Commands, asset_server: Res<AssetServer>, opts: Res<ProgOpt>) {
@@ -63,10 +63,10 @@ pub fn setup_scene_pre(mut commands: Commands, asset_server: Res<AssetServer>, o
 
 const IMG_BASE_SIZE: f32 = 1080. * 4. / 5.;
 const COLOR_2D_VIZ_COORD: Vec3 = Vec3::new(2000., 0., 0.);
-const COLOR_2D_VIZ_SIZE: f32 = 300.;
+const COLOR_2D_VIZ_SIZE: f32 = 350.;
 pub const COLOR_3D_VIZ_COORD: Vec3 = Vec3::new(-2000., 0., 0.);
 
-pub fn setup_scene<A>(
+pub fn draw_scene<A>(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut images: ResMut<Assets<Image>>,
@@ -138,7 +138,7 @@ pub fn setup_scene<A>(
                 Transform::from_translation(COLOR_3D_VIZ_COORD + Vec3::new(-2., 2., -2.))
                     .looking_at(COLOR_3D_VIZ_COORD, Vec3::Y),
             ),
-            (CamViewPort::ColorTunnel, MeshControlConf::default()),
+            (CamViewPort::Viz3d, MeshControlConf::default()),
         ));
     }
 }
@@ -211,7 +211,7 @@ fn spawn_2dviz_square(
                 ..default()
             },
         ),
-        CamViewPort::ColorDistribution,
+        CamViewPort::Viz2d,
     ));
 }
 
@@ -270,22 +270,24 @@ fn spawn_histogram_covering<A>(
     }
 }
 
-pub fn set_viewports(windows: Query<&Window>, mut query: Query<(&CamViewPort, &mut Camera)>) {
-    let window = windows.get_single().unwrap();
+pub const IMG_VIEW_W_RATIO: f32 = 0.8;
+pub const VIZ3D_H_RATIO: f32 = 0.5;
+pub fn set_viewports(window: Single<&Window>, mut query: Query<(&CamViewPort, &mut Camera)>) {
     let size = window.physical_size();
-    let img_filter_width = size.x * 4 / 5;
-    let viz_width = size.x / 5;
+    let img_filter_width = (size.x as f32 * IMG_VIEW_W_RATIO) as u32;
+    let viz_width = (size.x as f32 * (1. - IMG_VIEW_W_RATIO)) as u32;
+    let viz3d_height = (size.y as f32 * VIZ3D_H_RATIO) as u32;
 
     for (camera_position, mut camera) in &mut query {
         let (physical_position, physical_size) = match camera_position {
             CamViewPort::ImageFilter => (UVec2::new(0, 0), UVec2::new(img_filter_width, size.y)),
-            CamViewPort::ColorDistribution => (
-                UVec2::new(img_filter_width, size.y / 2),
-                UVec2::new(viz_width, size.y / 2),
+            CamViewPort::Viz2d => (
+                UVec2::new(img_filter_width, viz3d_height),
+                UVec2::new(viz_width, size.y - viz3d_height),
             ),
-            CamViewPort::ColorTunnel => (
+            CamViewPort::Viz3d => (
                 UVec2::new(img_filter_width, 0),
-                UVec2::new(viz_width, size.y / 2),
+                UVec2::new(viz_width, viz3d_height),
             ),
         };
 

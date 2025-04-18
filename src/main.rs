@@ -41,7 +41,7 @@ fn main() {
             MaterialPlugin::<Okhsv3DVizMaterial>::default(),
         ))
         .add_systems(Startup, setup_scene_pre)
-        .add_systems(Update, setup_scene::<OkhsvProvider>)
+        .add_systems(Update, draw_scene::<OkhsvProvider>)
         .add_systems(Update, control_blob)
         .add_systems(Update, change_param)
         .add_systems(Update, set_viewports)
