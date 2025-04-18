@@ -5,3 +5,9 @@ sefenbu（色分布，sè fēn bù，color distribution）visualizes OKHSV color
 ## Usage
 
 Just `sefenbu <your image>`
+
+## Installation
+
+```shell
+cargo install sefenbu
+```
