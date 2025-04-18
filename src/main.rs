@@ -6,12 +6,11 @@ mod scene;
 use bevy::{prelude::*, sprite::Material2dPlugin};
 use clap::Parser;
 use controls::*;
-use providers::okhsv::{Okhsv2DVizMaterial, Okhsv3DVizMaterial, OkhsvMaterial, OkhsvProvider};
+use providers::okhsv::{Okhsv2DVizMaterial, Okhsv3DVizMaterial, OkhsvMaterial};
 use scene::*;
 
 fn main() {
     let args = cli::Cli::parse();
-    let progopt: cli::ProgOpt = args.into();
 
     let default_plugin = DefaultPlugins
         .set(AssetPlugin {
@@ -33,7 +32,7 @@ fn main() {
         .set(bevy::log::LogPlugin::default());
 
     App::new()
-        .insert_resource(progopt)
+        .insert_resource(args)
         .add_plugins((
             default_plugin,
             Material2dPlugin::<OkhsvMaterial>::default(),
@@ -41,7 +40,7 @@ fn main() {
             MaterialPlugin::<Okhsv3DVizMaterial>::default(),
         ))
         .add_systems(Startup, setup_scene_pre)
-        .add_systems(Update, draw_scene::<OkhsvProvider>)
+        .add_systems(Update, draw_scene)
         .add_systems(Update, control_blob)
         .add_systems(Update, change_param)
         .add_systems(Update, set_viewports)

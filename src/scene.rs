@@ -9,7 +9,7 @@ use bevy::{
 };
 
 use crate::{
-    cli::ProgOpt,
+    cli::Cli,
     controls::{ColorParam, KbdCooldown},
     providers::{
         generic::Provider,
@@ -37,7 +37,7 @@ pub enum CamViewPort {
     Viz3d,
 }
 
-pub fn setup_scene_pre(mut commands: Commands, asset_server: Res<AssetServer>, opts: Res<ProgOpt>) {
+pub fn setup_scene_pre(mut commands: Commands, asset_server: Res<AssetServer>, opts: Res<Cli>) {
     // defer drawing of image
     let img_handle: Handle<Image> = asset_server.load(&opts.file);
     // associate the handle with an entity
@@ -66,21 +66,18 @@ const COLOR_2D_VIZ_COORD: Vec3 = Vec3::new(2000., 0., 0.);
 const COLOR_2D_VIZ_SIZE: f32 = 350.;
 pub const COLOR_3D_VIZ_COORD: Vec3 = Vec3::new(-2000., 0., 0.);
 
-pub fn draw_scene<A>(
+pub fn draw_scene(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut images: ResMut<Assets<Image>>,
     mut meshes: ResMut<Assets<Mesh>>,
     query: Query<(Entity, &ImageLoader)>,
-    _opts: ResMut<ProgOpt>,
     mut provider: ResMut<OkhsvProvider>,
     image_filters: ResMut<Assets<OkhsvMaterial>>,
     mut viz2d_materials: ResMut<Assets<Okhsv2DVizMaterial>>,
     mut viz3d_materials: ResMut<Assets<Okhsv3DVizMaterial>>,
     color_materials: ResMut<Assets<ColorMaterial>>,
-) where
-    A: Provider + Resource,
-{
+) {
     if query.is_empty() {
         // image already loaded
         return;
@@ -215,15 +212,13 @@ fn spawn_2dviz_square(
     ));
 }
 
-fn spawn_histogram_covering<A>(
-    provider: &mut ResMut<A>,
+fn spawn_histogram_covering(
+    provider: &mut ResMut<OkhsvProvider>,
     image: &Image,
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
     mut color_materials: ResMut<Assets<ColorMaterial>>,
-) where
-    A: Provider + Resource,
-{
+) {
     let mut data = provider.histogram_data(image);
     // normalize
     let max = data
