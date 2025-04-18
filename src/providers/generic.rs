@@ -19,7 +19,7 @@ pub trait Provider {
     /// give current value
     fn current(&self) -> f32;
     /// draw 3d viz mesh
-    fn create_mesh(&self, img: &Image) -> Mesh;
+    fn create_mesh(&mut self, img: &Image) -> Mesh;
 
     fn histogram_data(&self, img: &Image) -> Vec<(f32, f32)> {
         let mut result: BTreeMap<i64, i64> = BTreeMap::new();

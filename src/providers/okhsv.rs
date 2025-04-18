@@ -8,6 +8,7 @@ use bevy::{
         render_resource::{AsBindGroup, ShaderRef},
     },
     sprite::{AlphaMode2d, Material2d},
+    utils::HashMap,
 };
 
 use crate::COLOR_3D_VIZ_COORD;
@@ -23,6 +24,21 @@ pub struct OkhsvProvider {
     pub filter: OkhsvMaterial,
     pub viz2d_material: Okhsv2DVizMaterial,
     pub viz3d_material: Okhsv3DVizMaterial,
+    cache: HashMap<(u32, u32), Hsv>,
+}
+impl OkhsvProvider {
+    pub fn new(
+        filter: OkhsvMaterial,
+        viz2d_material: Okhsv2DVizMaterial,
+        viz3d_material: Okhsv3DVizMaterial,
+    ) -> Self {
+        OkhsvProvider {
+            filter,
+            viz2d_material,
+            viz3d_material,
+            cache: HashMap::new(),
+        }
+    }
 }
 
 fn to_okhsv(c: Color) -> Hsv {
@@ -68,7 +84,7 @@ impl Provider for OkhsvProvider {
     }
 
     fn set(&mut self, new: f32) {
-        let new_adjusted = new * OKHSV_H_MAX;
+        let new_adjusted = (new * OKHSV_H_MAX / OKHSV_H_DELTA) as i64 as f32 * OKHSV_H_DELTA;
         self.filter.h = new_adjusted;
         self.viz2d_material.h = new_adjusted;
         self.viz3d_material.h = new_adjusted;
@@ -79,7 +95,7 @@ impl Provider for OkhsvProvider {
         (okhsv.h * OKHSV_H_MAX / OKHSV_H_DELTA) as i64 * (OKHSV_H_DELTA as i64)
     }
 
-    fn create_mesh(&self, img: &Image) -> Mesh {
+    fn create_mesh(&mut self, img: &Image) -> Mesh {
         // collect distribution
         let mut stats: BTreeMap<(i64, i64), i64> = BTreeMap::new();
         let w = img.width();
@@ -89,7 +105,15 @@ impl Provider for OkhsvProvider {
         // this look takes the most time
         for i in 0..w {
             for j in 0..h {
-                let okhsv = to_okhsv(img.get_color_at(i, j).unwrap());
+                // cache colors
+                let okhsv = match self.cache.get(&(i, j)) {
+                    Some(c) => c.clone(),
+                    None => {
+                        let c = to_okhsv(img.get_color_at(i, j).unwrap());
+                        self.cache.insert((i, j), c.clone());
+                        c
+                    }
+                };
                 if (okhsv.h * OKHSV_H_MAX - current).abs() > OKHSV_H_DELTA {
                     // within range, increment count
                     let key = (
@@ -111,7 +135,6 @@ impl Provider for OkhsvProvider {
         let mut vtxs: Vec<[f32; 3]> = vec![];
         let mut indices: Vec<u32> = vec![];
         let (mut i, mut j, mut k) = (0, 0, 0);
-        // info!("recorded: {:?}", stats.keys().cloned().collect::<Vec<_>>());
 
         // add mesh vertexes and indices
         while i <= OKHSV_SV_MAXI {
@@ -119,11 +142,7 @@ impl Provider for OkhsvProvider {
                 // draw cube
                 let base_x = i as f32 * OKHSV_SV_DELTA_N;
                 let base_z = j as f32 * OKHSV_SV_DELTA_N;
-                let y = *stats
-                    .get(&(i * OKHSV_SV_DELTAI, j * OKHSV_SV_DELTAI))
-                    .unwrap_or(&0) as f32
-                    / max;
-                // info!("queried: {:?}", (i * OKHSV_SV_DELTAI, j * OKHSV_SV_DELTAI));
+                let y = *stats.get(&(i, j)).unwrap_or(&0) as f32 / max;
                 // top 4
                 let mut top_vtxs = vec![
                     [base_x - 0.5, y, base_z - 0.5],

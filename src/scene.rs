@@ -45,11 +45,11 @@ pub fn setup_scene_pre(mut commands: Commands, asset_server: Res<AssetServer>, o
 
     // TODO: generate from progopt
     // create the global image filter shader
-    let p = OkhsvProvider {
-        filter: OkhsvMaterial::new(360., img_handle.clone()),
-        viz2d_material: Okhsv2DVizMaterial::new(360.),
-        viz3d_material: Okhsv3DVizMaterial::new(360.),
-    };
+    let p = OkhsvProvider::new(
+        OkhsvMaterial::new(360., img_handle.clone()),
+        Okhsv2DVizMaterial::new(360.),
+        Okhsv3DVizMaterial::new(360.),
+    );
 
     // create the controls, consisting of the keybind timeout timer and the current value of the
     // params
@@ -73,7 +73,7 @@ pub fn draw_scene<A>(
     mut meshes: ResMut<Assets<Mesh>>,
     query: Query<(Entity, &ImageLoader)>,
     _opts: ResMut<ProgOpt>,
-    mut provider: Res<OkhsvProvider>,
+    mut provider: ResMut<OkhsvProvider>,
     image_filters: ResMut<Assets<OkhsvMaterial>>,
     mut viz2d_materials: ResMut<Assets<Okhsv2DVizMaterial>>,
     mut viz3d_materials: ResMut<Assets<Okhsv3DVizMaterial>>,
@@ -147,7 +147,7 @@ fn spawn_image(
     image: &mut Image,
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
-    filter: &Res<OkhsvProvider>,
+    filter: &ResMut<OkhsvProvider>,
     mut image_filters: ResMut<Assets<OkhsvMaterial>>,
 ) {
     // don't downscale the image
@@ -216,7 +216,7 @@ fn spawn_2dviz_square(
 }
 
 fn spawn_histogram_covering<A>(
-    provider: &mut Res<A>,
+    provider: &mut ResMut<A>,
     image: &Image,
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
