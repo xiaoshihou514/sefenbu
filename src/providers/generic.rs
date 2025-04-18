@@ -2,19 +2,22 @@ use std::collections::BTreeMap;
 
 use bevy::prelude::*;
 pub trait Provider {
-    // this function should return the value for histogram given a pixel
+    /// returns the value for histogram given a pixel
     fn convert(&self, pixel: Color) -> i64;
-    // the max value for the key field
+    /// the max value for the key field
     fn max(&self) -> f32;
-    // the min value for the key field
+    /// the min value for the key field
     fn min(&self) -> f32;
-    // the delta value for the provider
+    /// the delta value for the provider
     fn delta(&self) -> f32;
-    // perform changes onto the provider
+    /// perform changes onto the provider
     fn incr(&mut self, change: f32);
+    /// perform changes onto the provider
     fn decr(&mut self, change: f32);
-    // give current value
+    /// give current value
     fn current(&self) -> f32;
+    /// draw 3d viz mesh
+    fn create_mesh(&self, img: &Image) -> Mesh;
 
     fn histogram_data(&self, img: &Image) -> Vec<(f32, f32)> {
         let mut result: BTreeMap<i64, i64> = BTreeMap::new();

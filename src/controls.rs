@@ -6,7 +6,7 @@ use crate::{
         okhsv::{Okhsv2DVizMaterial, Okhsv3DVizMaterial, OkhsvMaterial, OkhsvProvider},
     },
     scene::{ImageCanvas, ImageLoader},
-    Viz2DCanvas, Viz3DMesh, COLOR_3D_VIZ_COORD,
+    Background, Viz2DCanvas, Viz3DMesh, COLOR_3D_VIZ_COORD,
 };
 
 #[derive(Component)]
@@ -24,8 +24,8 @@ impl Default for MeshControlConf {
             v_yaw: 0.01,
             // 2 * sqrt(3)
             orbit_distance: 3.4641016151377544,
-            pitch_max: 0.3,
-            pitch_min: -0.8,
+            pitch_max: 0.0,
+            pitch_min: -0.9,
         }
     }
 }
@@ -90,16 +90,23 @@ pub fn change_param(
     mut param: ResMut<ColorParam>,
     time: Res<Time>,
     mut p: ResMut<OkhsvProvider>,
+    img: Option<Res<Background>>,
+    loader: Query<(Entity, &ImageLoader)>,
+    // queries for entities that needs to be updated
     mut img_canvas: Query<(&mut MeshMaterial2d<OkhsvMaterial>, &ImageCanvas)>,
     mut viz2d_canvas: Query<(&mut MeshMaterial2d<Okhsv2DVizMaterial>, &Viz2DCanvas)>,
-    mut viz3d_mesh: Query<(&mut MeshMaterial3d<Okhsv3DVizMaterial>, &Viz3DMesh)>,
+    mut viz3d_mesh: Query<(
+        (&mut MeshMaterial3d<Okhsv3DVizMaterial>, &mut Mesh3d),
+        &Viz3DMesh,
+    )>,
+    mut text: Query<&mut Text2d>,
+    // entity managers
     mut img_filters: ResMut<Assets<OkhsvMaterial>>,
     mut viz2d_materials: ResMut<Assets<Okhsv2DVizMaterial>>,
     mut viz3d_materials: ResMut<Assets<Okhsv3DVizMaterial>>,
-    loader: Query<(Entity, &ImageLoader)>,
-    mut text: Query<&mut Text2d>,
+    mut meshes: ResMut<Assets<Mesh>>,
 ) {
-    if !param.cooldown.finished(time) || !loader.is_empty() {
+    if !param.cooldown.finished(time) || !loader.is_empty() || img.is_none() {
         return;
     }
 
@@ -119,11 +126,17 @@ pub fn change_param(
         param.cooldown.reset();
     }
 
-    // apply change, original material substituted
+    // apply change, original item substituted
     if p.is_changed() {
+        // update image filter
         img_canvas.single_mut().0 .0 = img_filters.add(p.filter.clone());
+        // update viz2d current color indicator
         viz2d_canvas.single_mut().0 .0 = viz2d_materials.add(p.viz2d_material.clone());
-        viz3d_mesh.single_mut().0 .0 = viz3d_materials.add(p.viz3d_material.clone());
+        // update viz3d material
+        viz3d_mesh.single_mut().0 .0 .0 = viz3d_materials.add(p.viz3d_material.clone());
+        // update viz3d mesh
+        viz3d_mesh.single_mut().0 .1 .0 = meshes.add(p.create_mesh(&img.unwrap().0));
+        // update param banner
         text.single_mut().0 = String::from(format!("{}", p.current()));
     }
 }

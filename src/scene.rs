@@ -27,6 +27,8 @@ pub struct Viz3DMesh;
 
 #[derive(Component)]
 pub struct ImageLoader(pub Handle<Image>);
+#[derive(Resource)]
+pub struct Background(pub Image);
 
 #[derive(Component)]
 pub enum CamViewPort {
@@ -66,13 +68,12 @@ pub const COLOR_3D_VIZ_COORD: Vec3 = Vec3::new(-2000., 0., 0.);
 
 pub fn setup_scene<A>(
     mut commands: Commands,
-    mut provider: Res<A>,
     asset_server: Res<AssetServer>,
     mut images: ResMut<Assets<Image>>,
     mut meshes: ResMut<Assets<Mesh>>,
     query: Query<(Entity, &ImageLoader)>,
     _opts: ResMut<ProgOpt>,
-    filter: Res<OkhsvProvider>,
+    mut provider: Res<OkhsvProvider>,
     image_filters: ResMut<Assets<OkhsvMaterial>>,
     mut viz2d_materials: ResMut<Assets<Okhsv2DVizMaterial>>,
     mut viz3d_materials: ResMut<Assets<Okhsv3DVizMaterial>>,
@@ -91,9 +92,11 @@ pub fn setup_scene<A>(
     if let (Some(LoadState::Loaded), Some(image)) = (load_state, images.get_mut(&loader.0)) {
         // delete marker entity
         commands.entity(entity).despawn();
+        // add image to background entity
+        commands.insert_resource(Background(image.clone()));
 
         // display image
-        spawn_image(image, &mut commands, &mut meshes, &filter, image_filters);
+        spawn_image(image, &mut commands, &mut meshes, &provider, image_filters);
 
         // display 2d viz
         spawn_2dviz_square(&mut commands, &mut meshes, &mut viz2d_materials);
@@ -117,9 +120,8 @@ pub fn setup_scene<A>(
 
         commands.spawn((
             (
-                // TODO: change to custom mesh
-                Mesh3d(meshes.add(Cuboid::default())),
-                MeshMaterial3d(viz3d_materials.add(filter.viz3d_material.clone())),
+                Mesh3d(meshes.add(provider.create_mesh(image))),
+                MeshMaterial3d(viz3d_materials.add(provider.viz3d_material.clone())),
                 Transform::from_translation(COLOR_3D_VIZ_COORD),
             ),
             Viz3DMesh,
