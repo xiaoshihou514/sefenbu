@@ -4,13 +4,11 @@ use bevy::{
     sprite::{AlphaMode2d, Material2d},
     utils::HashMap,
 };
+use palette::{FromColor, Okhsv, Srgb};
 
 use crate::COLOR_3D_VIZ_COORD;
 
-use super::{
-    generic::{CSpaceProvider, FromImage, Provider},
-    oklab_common::{Hsv, Lab},
-};
+use super::generic::{CSpaceProvider, FromImage, Provider};
 
 // global state
 #[derive(Resource)]
@@ -18,7 +16,7 @@ pub struct OkhsvProvider {
     pub filter: OkhsvMaterial,
     pub viz2d_material: Okhsv2DVizMaterial,
     pub viz3d_material: Okhsv3DVizMaterial,
-    cache: HashMap<(u32, u32), Hsv>,
+    cache: HashMap<(u32, u32), Okhsv>,
 }
 
 impl CSpaceProvider for OkhsvProvider {
@@ -50,13 +48,9 @@ impl FromImage for OkhsvProvider {
     }
 }
 
-fn to_okhsv(c: Color) -> Hsv {
-    let lab: Oklaba = c.into();
-    Hsv::from(&Lab {
-        L: lab.lightness,
-        a: lab.a,
-        b: lab.b,
-    })
+fn to_okhsv(c: Color) -> Okhsv {
+    let s: Srgba = c.into();
+    Okhsv::from_color(Srgb::new(s.red, s.green, s.blue))
 }
 
 const OKHSV_DELTA: f32 = 2.;
@@ -97,27 +91,29 @@ impl Provider for OkhsvProvider {
     }
 
     fn convert(&self, c: Color) -> i64 {
-        let okhsv: Hsv = to_okhsv(c);
-        (okhsv.h * Self::MAX / Self::DELTA) as i64 * (Self::DELTA as i64)
+        let okhsv: Okhsv = to_okhsv(c);
+        (okhsv.hue.into_positive_degrees() / Self::DELTA) as i64 * (Self::DELTA as i64)
     }
 
     fn inspect(&mut self, img: &Image, i: u32, j: u32) -> (bool, (i64, i64)) {
         // cache colors
         let okhsv = match self.cache.get(&(i, j)) {
-            Some(c) => c.clone(),
+            Some(c) => *c,
             None => {
                 let c = to_okhsv(img.get_color_at(i, j).unwrap());
-                self.cache.insert((i, j), c.clone());
+                self.cache.insert((i, j), c);
                 c
             }
         };
-        if (okhsv.h * Self::MAX - self.current()).abs() > Self::DELTA {
+        if (okhsv.hue.into_positive_degrees() - self.current()).abs() > Self::DELTA {
             // within range
             (
                 true,
                 (
-                    (okhsv.s * OKHSV_SV_MAX / OKHSV_SV_DELTA) as i64 * (OKHSV_SV_DELTA as i64),
-                    (okhsv.v * OKHSV_SV_MAX / OKHSV_SV_DELTA) as i64 * (OKHSV_SV_DELTA as i64),
+                    (Into::<f32>::into(okhsv.saturation) * OKHSV_SV_MAX / OKHSV_SV_DELTA) as i64
+                        * (OKHSV_SV_DELTA as i64),
+                    (Into::<f32>::into(okhsv.value) * OKHSV_SV_MAX / OKHSV_SV_DELTA) as i64
+                        * (OKHSV_SV_DELTA as i64),
                 ),
             )
         } else {

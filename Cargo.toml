@@ -17,6 +17,7 @@ bevy = { version = "0.15.2", features = [
   "webp",
 ] }
 clap = { version = "4.5.29", features = ["derive"] }
+palette = "0.7.6"
 
 [profile.dev]
 opt-level = 1

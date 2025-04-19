@@ -20,7 +20,7 @@ impl Default for MeshControlConf {
             v_pitch: 0.01,
             v_yaw: 0.01,
             // 2 * sqrt(3)
-            orbit_distance: 3.4641016151377544,
+            orbit_distance: 3.464_101_6,
             pitch_max: 0.0,
             pitch_min: -0.9,
         }
@@ -69,8 +69,8 @@ pub fn control_blob(
 
     let size = window.size();
     let pos = window.cursor_position().unwrap();
-    let x_threshold = size.x as f32 * IMG_VIEW_W_RATIO;
-    let y_threshold = size.y as f32 * VIZ3D_H_RATIO;
+    let x_threshold = size.x * IMG_VIEW_W_RATIO;
+    let y_threshold = size.y * VIZ3D_H_RATIO;
 
     // check in bound
     if mouse.pressed(MouseButton::Left) && pos.x > x_threshold && pos.y < y_threshold {
@@ -120,11 +120,11 @@ pub fn change_param<A: CSpaceProvider>(
     if mouse.just_pressed(MouseButton::Left) {
         let size = window.size();
         let pos = window.cursor_position().unwrap();
-        let x_threshold = size.x as f32 * IMG_VIEW_W_RATIO;
-        let y_threshold = size.y as f32 * VIZ3D_H_RATIO;
+        let x_threshold = size.x * IMG_VIEW_W_RATIO;
+        let y_threshold = size.y * VIZ3D_H_RATIO;
 
         if pos.x > x_threshold && pos.y > y_threshold {
-            p.set((pos.x - x_threshold) as f32 / (size.x as f32 - x_threshold));
+            p.set(pos.x - x_threshold / (size.x - x_threshold));
         }
     }
 
