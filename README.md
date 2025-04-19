@@ -8,6 +8,10 @@ Just `sefenbu <your image>`
 
 ## Installation
 
+Install dependencies for [bevy](https://bevyengine.org/learn/quick-start/getting-started/setup/#installing-os-dependencies) first.
+
 ```shell
 cargo install sefenbu
 ```
+
+For those not on wayland, remove the wayland flag from `Cargo.toml` and build from source.
