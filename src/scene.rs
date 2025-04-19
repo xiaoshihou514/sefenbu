@@ -11,10 +11,7 @@ use bevy::{
 use crate::{
     cli::Cli,
     controls::{ColorParam, KbdCooldown},
-    providers::{
-        generic::{CSpaceProvider, Provider},
-        okhsv::{Okhsv2DVizMaterial, Okhsv3DVizMaterial, OkhsvMaterial, OkhsvProvider},
-    },
+    providers::generic::CSpaceProvider,
     MeshControlConf,
 };
 
@@ -71,10 +68,10 @@ pub fn draw_scene<A: CSpaceProvider>(
     mut images: ResMut<Assets<Image>>,
     mut meshes: ResMut<Assets<Mesh>>,
     query: Query<(Entity, &ImageLoader)>,
-    mut provider: ResMut<OkhsvProvider>,
-    image_filters: ResMut<Assets<OkhsvMaterial>>,
-    mut viz2d_materials: ResMut<Assets<Okhsv2DVizMaterial>>,
-    mut viz3d_materials: ResMut<Assets<Okhsv3DVizMaterial>>,
+    mut provider: ResMut<A>,
+    image_filters: ResMut<Assets<A::FilterMaterial>>,
+    mut viz2d_materials: ResMut<Assets<A::Viz2dMaterial>>,
+    mut viz3d_materials: ResMut<Assets<A::Viz3dMaterial>>,
     color_materials: ResMut<Assets<ColorMaterial>>,
 ) {
     if query.is_empty() {
@@ -92,10 +89,10 @@ pub fn draw_scene<A: CSpaceProvider>(
         commands.insert_resource(Background(image.clone()));
 
         // display image
-        spawn_image(image, &mut commands, &mut meshes, &provider, image_filters);
+        spawn_image::<A>(image, &mut commands, &mut meshes, &provider, image_filters);
 
         // display 2d viz
-        spawn_2dviz_square(&mut commands, &mut meshes, &mut viz2d_materials);
+        spawn_2dviz_square::<A>(&mut commands, &mut meshes, &mut viz2d_materials);
 
         // spawn rectangles that would generate the histogram shape
         // by covering extra parts
@@ -117,7 +114,7 @@ pub fn draw_scene<A: CSpaceProvider>(
         commands.spawn((
             (
                 Mesh3d(meshes.add(provider.create_mesh(image))),
-                MeshMaterial3d(viz3d_materials.add(provider.viz3d_material.clone())),
+                MeshMaterial3d(viz3d_materials.add(provider.get_viz3d_material())),
                 Transform::from_translation(COLOR_3D_VIZ_COORD),
             ),
             Viz3DMesh,
@@ -139,12 +136,12 @@ pub fn draw_scene<A: CSpaceProvider>(
     }
 }
 
-fn spawn_image(
+fn spawn_image<A: CSpaceProvider>(
     image: &mut Image,
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
-    filter: &ResMut<OkhsvProvider>,
-    mut image_filters: ResMut<Assets<OkhsvMaterial>>,
+    provider: &ResMut<A>,
+    mut image_filters: ResMut<Assets<A::FilterMaterial>>,
 ) {
     // don't downscale the image
     image.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
@@ -163,7 +160,7 @@ fn spawn_image(
     commands.spawn((
         (
             Mesh2d(meshes.add(Rectangle::new(IMG_BASE_SIZE * aspect_ratio, IMG_BASE_SIZE))),
-            MeshMaterial2d(image_filters.add(filter.filter.clone())),
+            MeshMaterial2d(image_filters.add(provider.get_filter())),
         ),
         ImageCanvas,
     ));
@@ -181,16 +178,16 @@ fn spawn_image(
     ));
 }
 
-fn spawn_2dviz_square(
+fn spawn_2dviz_square<A: CSpaceProvider>(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
-    viz2d_materials: &mut ResMut<Assets<Okhsv2DVizMaterial>>,
+    viz2d_materials: &mut ResMut<Assets<A::Viz2dMaterial>>,
 ) {
     // Spawn corresponding 2d color distribution
     commands.spawn((
         (
             Mesh2d(meshes.add(Mesh::from(Rectangle::default()))),
-            MeshMaterial2d(viz2d_materials.add(Okhsv2DVizMaterial::new(360.))),
+            MeshMaterial2d(viz2d_materials.add(A::Viz2dMaterial::default())),
             Transform::from_translation(COLOR_2D_VIZ_COORD)
                 .with_scale(Vec3::splat(COLOR_2D_VIZ_SIZE)),
         ),
@@ -211,8 +208,8 @@ fn spawn_2dviz_square(
     ));
 }
 
-fn spawn_histogram_covering(
-    provider: &mut ResMut<OkhsvProvider>,
+fn spawn_histogram_covering<A: CSpaceProvider>(
+    provider: &mut ResMut<A>,
     image: &Image,
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,

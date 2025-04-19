@@ -3,9 +3,13 @@ use std::collections::BTreeMap;
 use bevy::{prelude::*, sprite::Material2d};
 
 pub trait CSpaceProvider: Provider + Resource + FromImage {
-    type FilterMaterial: Material2d;
-    type Viz2dMaterial: Material2d;
-    type Viz3dMaterial: Material;
+    type FilterMaterial: Material2d + FromImage;
+    type Viz2dMaterial: Material2d + Default;
+    type Viz3dMaterial: Material + Default;
+
+    fn get_filter(&self) -> Self::FilterMaterial;
+    fn get_viz2d_material(&self) -> Self::Viz2dMaterial;
+    fn get_viz3d_material(&self) -> Self::Viz3dMaterial;
 }
 
 pub trait FromImage {

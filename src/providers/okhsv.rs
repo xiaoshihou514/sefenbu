@@ -31,14 +31,26 @@ impl CSpaceProvider for OkhsvProvider {
     type FilterMaterial = OkhsvMaterial;
     type Viz2dMaterial = Okhsv2DVizMaterial;
     type Viz3dMaterial = Okhsv3DVizMaterial;
+
+    fn get_filter(&self) -> Self::FilterMaterial {
+        self.filter.clone()
+    }
+
+    fn get_viz2d_material(&self) -> Self::Viz2dMaterial {
+        self.viz2d_material.clone()
+    }
+
+    fn get_viz3d_material(&self) -> Self::Viz3dMaterial {
+        self.viz3d_material.clone()
+    }
 }
 
 impl FromImage for OkhsvProvider {
     fn from_image(img: Handle<Image>) -> Self {
         OkhsvProvider {
-            filter: OkhsvMaterial::new(360., img),
-            viz2d_material: Okhsv2DVizMaterial::new(360.),
-            viz3d_material: Okhsv3DVizMaterial::new(360.),
+            filter: OkhsvMaterial::from_image(img),
+            viz2d_material: Okhsv2DVizMaterial::default(),
+            viz3d_material: Okhsv3DVizMaterial::default(),
             cache: HashMap::new(),
         }
     }
@@ -215,10 +227,10 @@ pub struct OkhsvMaterial {
     _alpha_mode: AlphaMode2d,
 }
 
-impl OkhsvMaterial {
-    pub fn new(h: f32, image: Handle<Image>) -> OkhsvMaterial {
+impl FromImage for OkhsvMaterial {
+    fn from_image(image: Handle<Image>) -> Self {
         OkhsvMaterial {
-            h,
+            h: 360.,
             delta: OKHSV_H_DELTA,
             color_texture: image,
             _alpha_mode: AlphaMode2d::Blend,
@@ -245,10 +257,10 @@ pub struct Okhsv2DVizMaterial {
     _alpha_mode: AlphaMode2d,
 }
 
-impl Okhsv2DVizMaterial {
-    pub fn new(h: f32) -> Self {
+impl Default for Okhsv2DVizMaterial {
+    fn default() -> Self {
         Okhsv2DVizMaterial {
-            h,
+            h: 360.,
             delta: OKHSV_H_DELTA,
             _alpha_mode: AlphaMode2d::Blend,
         }
@@ -276,10 +288,10 @@ pub struct Okhsv3DVizMaterial {
     _alpha_mode: AlphaMode,
 }
 
-impl Okhsv3DVizMaterial {
-    pub fn new(h: f32) -> Self {
+impl Default for Okhsv3DVizMaterial {
+    fn default() -> Self {
         Okhsv3DVizMaterial {
-            h,
+            h: 360.,
             delta: OKHSV_H_DELTA,
             bottom: COLOR_3D_VIZ_COORD - Vec3::new(0.5, 0.5, 0.5),
             _alpha_mode: AlphaMode::AlphaToCoverage,

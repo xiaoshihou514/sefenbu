@@ -1,10 +1,7 @@
 use bevy::{input::mouse::AccumulatedMouseMotion, prelude::*};
 
 use crate::{
-    providers::{
-        generic::{CSpaceProvider, Provider},
-        okhsv::{Okhsv2DVizMaterial, Okhsv3DVizMaterial, OkhsvMaterial, OkhsvProvider},
-    },
+    providers::generic::CSpaceProvider,
     scene::{ImageCanvas, ImageLoader},
     Background, Viz2DCanvas, Viz3DMesh, COLOR_3D_VIZ_COORD, IMG_VIEW_W_RATIO, VIZ3D_H_RATIO,
 };
@@ -102,17 +99,17 @@ pub fn change_param<A: CSpaceProvider>(
     img: Option<Res<Background>>,
     loader: Query<(Entity, &ImageLoader)>,
     // queries for entities that needs to be updated
-    mut img_canvas: Query<(&mut MeshMaterial2d<OkhsvMaterial>, &ImageCanvas)>,
-    mut viz2d_canvas: Query<(&mut MeshMaterial2d<Okhsv2DVizMaterial>, &Viz2DCanvas)>,
+    mut img_canvas: Query<(&mut MeshMaterial2d<A::FilterMaterial>, &ImageCanvas)>,
+    mut viz2d_canvas: Query<(&mut MeshMaterial2d<A::Viz2dMaterial>, &Viz2DCanvas)>,
     mut viz3d_mesh: Query<(
-        (&mut MeshMaterial3d<Okhsv3DVizMaterial>, &mut Mesh3d),
+        (&mut MeshMaterial3d<A::Viz3dMaterial>, &mut Mesh3d),
         &Viz3DMesh,
     )>,
     mut text: Query<&mut Text2d>,
     // entity managers
-    mut img_filters: ResMut<Assets<OkhsvMaterial>>,
-    mut viz2d_materials: ResMut<Assets<Okhsv2DVizMaterial>>,
-    mut viz3d_materials: ResMut<Assets<Okhsv3DVizMaterial>>,
+    mut img_filters: ResMut<Assets<A::FilterMaterial>>,
+    mut viz2d_materials: ResMut<Assets<A::Viz2dMaterial>>,
+    mut viz3d_materials: ResMut<Assets<A::Viz3dMaterial>>,
     mut meshes: ResMut<Assets<Mesh>>,
 ) {
     if !param.cooldown.finished(time) || !loader.is_empty() || img.is_none() {
@@ -150,14 +147,14 @@ pub fn change_param<A: CSpaceProvider>(
     // apply change, original item substituted
     if p.is_changed() {
         // update image filter
-        img_canvas.single_mut().0 .0 = img_filters.add(p.filter.clone());
+        img_canvas.single_mut().0 .0 = img_filters.add(p.get_filter());
         // update viz2d current color indicator
-        viz2d_canvas.single_mut().0 .0 = viz2d_materials.add(p.viz2d_material.clone());
+        viz2d_canvas.single_mut().0 .0 = viz2d_materials.add(p.get_viz2d_material());
         // update viz3d material
-        viz3d_mesh.single_mut().0 .0 .0 = viz3d_materials.add(p.viz3d_material.clone());
+        viz3d_mesh.single_mut().0 .0 .0 = viz3d_materials.add(p.get_viz3d_material());
         // update viz3d mesh
         viz3d_mesh.single_mut().0 .1 .0 = meshes.add(p.create_mesh(&img.unwrap().0));
         // update param banner
-        text.single_mut().0 = String::from(format!("{}", p.current()));
+        text.single_mut().0 = format!("{}", p.current());
     }
 }
