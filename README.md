@@ -26,4 +26,4 @@ Install dependencies for [bevy](https://bevyengine.org/learn/quick-start/getting
 cargo install sefenbu
 ```
 
-For those not on X11, remove the wayland flag from `Cargo.toml` and build from source.
+For those on X11, remove the wayland flag from `Cargo.toml` and build from source.
