@@ -50,7 +50,7 @@ pub fn setup_scene_pre<A: CSpaceProvider>(
     // create the controls, consisting of the keybind timeout timer and the current value of the
     // params
     commands.insert_resource(ColorParam {
-        delta: p.delta(),
+        delta: A::DELTA,
         cooldown: KbdCooldown::default(),
     });
 
@@ -224,9 +224,9 @@ fn spawn_histogram_covering<A: CSpaceProvider>(
         .1;
     data.iter_mut().for_each(|(_, y)| *y /= max);
 
-    let mut x = provider.min();
+    let mut x = A::MIN;
     let mut iter = data.iter().peekable();
-    while x < provider.max() {
+    while x < A::MAX {
         // data is in ascending order, so just iter through
         let ratio = match iter.peek() {
             Some((y, z)) => {
@@ -240,24 +240,21 @@ fn spawn_histogram_covering<A: CSpaceProvider>(
             None => 0.,
         };
         commands.spawn((
-                    Mesh2d(meshes.add(Mesh::from(Rectangle::new(
-                        provider.delta() / provider.max(),
-                        1. - ratio,
-                    )))),
-                    MeshMaterial2d(color_materials.add(Color::srgb_u8(42, 44, 46))),
-                    Transform::from_translation(
-                        COLOR_2D_VIZ_COORD
+            Mesh2d(meshes.add(Mesh::from(Rectangle::new(A::DELTA / A::MAX, 1. - ratio)))),
+            MeshMaterial2d(color_materials.add(Color::srgb_u8(42, 44, 46))),
+            Transform::from_translation(
+                COLOR_2D_VIZ_COORD
                             // render on top of distribution
                             + Vec3::Z
                             // move bar to corresponding color pos
                             // HACK: provider.delta() / 2. seems to fix off by 1 error
-                            + Vec3::X * ((x + provider.delta() / 2.) / provider.max() - 0.5) * COLOR_2D_VIZ_SIZE
+                            + Vec3::X * ((x + A::DELTA / 2.) / A::MAX - 0.5) * COLOR_2D_VIZ_SIZE
                             // align top with 2d viz top
                             + Vec3::Y * (ratio * COLOR_2D_VIZ_SIZE / 2.),
-                    )
-                    .with_scale(Vec3::splat(COLOR_2D_VIZ_SIZE)),
-                ));
-        x += provider.delta();
+            )
+            .with_scale(Vec3::splat(COLOR_2D_VIZ_SIZE)),
+        ));
+        x += A::DELTA;
     }
 }
 
