@@ -12,7 +12,7 @@ use crate::{
     cli::Cli,
     controls::{ColorParam, KbdCooldown},
     providers::{
-        generic::Provider,
+        generic::{CSpaceProvider, Provider},
         okhsv::{Okhsv2DVizMaterial, Okhsv3DVizMaterial, OkhsvMaterial, OkhsvProvider},
     },
     MeshControlConf,
@@ -37,19 +37,18 @@ pub enum CamViewPort {
     Viz3d,
 }
 
-pub fn setup_scene_pre(mut commands: Commands, asset_server: Res<AssetServer>, opts: Res<Cli>) {
+pub fn setup_scene_pre<A: CSpaceProvider>(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    opts: Res<Cli>,
+) {
     // defer drawing of image
     let img_handle: Handle<Image> = asset_server.load(&opts.file);
     // associate the handle with an entity
     commands.spawn(ImageLoader(img_handle.clone()));
 
-    // TODO: generate from progopt
     // create the global image filter shader
-    let p = OkhsvProvider::new(
-        OkhsvMaterial::new(360., img_handle.clone()),
-        Okhsv2DVizMaterial::new(360.),
-        Okhsv3DVizMaterial::new(360.),
-    );
+    let p = A::from_image(img_handle.clone());
 
     // create the controls, consisting of the keybind timeout timer and the current value of the
     // params
@@ -66,7 +65,7 @@ const COLOR_2D_VIZ_COORD: Vec3 = Vec3::new(2000., 0., 0.);
 const COLOR_2D_VIZ_SIZE: f32 = 350.;
 pub const COLOR_3D_VIZ_COORD: Vec3 = Vec3::new(-2000., 0., 0.);
 
-pub fn draw_scene(
+pub fn draw_scene<A: CSpaceProvider>(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut images: ResMut<Assets<Image>>,

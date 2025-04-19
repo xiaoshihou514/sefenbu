@@ -2,7 +2,7 @@ use bevy::{input::mouse::AccumulatedMouseMotion, prelude::*};
 
 use crate::{
     providers::{
-        generic::Provider,
+        generic::{CSpaceProvider, Provider},
         okhsv::{Okhsv2DVizMaterial, Okhsv3DVizMaterial, OkhsvMaterial, OkhsvProvider},
     },
     scene::{ImageCanvas, ImageLoader},
@@ -92,13 +92,13 @@ pub fn control_blob(
     }
 }
 
-pub fn change_param(
+pub fn change_param<A: CSpaceProvider>(
     keyboard: Res<ButtonInput<KeyCode>>,
     mouse: Res<ButtonInput<MouseButton>>,
     window: Single<&Window>,
     mut param: ResMut<ColorParam>,
     time: Res<Time>,
-    mut p: ResMut<OkhsvProvider>,
+    mut p: ResMut<A>,
     img: Option<Res<Background>>,
     loader: Query<(Entity, &ImageLoader)>,
     // queries for entities that needs to be updated

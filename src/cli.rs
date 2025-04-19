@@ -8,4 +8,8 @@ pub struct Cli {
     /// Input image
     #[arg(value_name = "FILE")]
     pub file: String,
+
+    /// Color space
+    #[arg(short, long)]
+    pub using: Option<String>,
 }

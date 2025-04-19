@@ -3,15 +3,27 @@ mod controls;
 mod providers;
 mod scene;
 
-use bevy::{prelude::*, sprite::Material2dPlugin};
+use bevy::{
+    prelude::*,
+    sprite::{Material2d, Material2dPlugin},
+};
 use clap::Parser;
+use cli::Cli;
 use controls::*;
-use providers::okhsv::{Okhsv2DVizMaterial, Okhsv3DVizMaterial, OkhsvMaterial};
+use providers::{generic::CSpaceProvider, okhsv::OkhsvProvider};
 use scene::*;
 
 fn main() {
-    let args = cli::Cli::parse();
+    let args = Cli::parse();
+    match args.using.clone().unwrap_or("okhsv".to_string()).as_str() {
+        "okhsv" => {
+            app_run::<OkhsvProvider>(args);
+        }
+        s => error!("Did not recognize color space {}", s),
+    }
+}
 
+fn app_run<A: CSpaceProvider>(args: Cli) {
     let default_plugin = DefaultPlugins
         .set(AssetPlugin {
             file_path: std::env::current_dir()
@@ -35,14 +47,14 @@ fn main() {
         .insert_resource(args)
         .add_plugins((
             default_plugin,
-            Material2dPlugin::<OkhsvMaterial>::default(),
-            Material2dPlugin::<Okhsv2DVizMaterial>::default(),
-            MaterialPlugin::<Okhsv3DVizMaterial>::default(),
+            // Material2dPlugin::<A::FilterMaterial>::default(),
+            // Material2dPlugin::<A::Viz2dMaterial>::default(),
+            // MaterialPlugin::<A::Viz3dMaterial>::default(),
         ))
-        .add_systems(Startup, setup_scene_pre)
-        .add_systems(Update, draw_scene)
+        .add_systems(Startup, setup_scene_pre::<A>)
+        .add_systems(Update, draw_scene::<A>)
         .add_systems(Update, control_blob)
-        .add_systems(Update, change_param)
+        .add_systems(Update, change_param::<A>)
         .add_systems(Update, set_viewports)
         .run();
 }

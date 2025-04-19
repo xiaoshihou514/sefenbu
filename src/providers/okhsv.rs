@@ -14,7 +14,7 @@ use bevy::{
 use crate::COLOR_3D_VIZ_COORD;
 
 use super::{
-    generic::Provider,
+    generic::{CSpaceProvider, FromImage, Provider},
     oklab_common::{Hsv, Lab},
 };
 
@@ -26,16 +26,19 @@ pub struct OkhsvProvider {
     pub viz3d_material: Okhsv3DVizMaterial,
     cache: HashMap<(u32, u32), Hsv>,
 }
-impl OkhsvProvider {
-    pub fn new(
-        filter: OkhsvMaterial,
-        viz2d_material: Okhsv2DVizMaterial,
-        viz3d_material: Okhsv3DVizMaterial,
-    ) -> Self {
+
+impl CSpaceProvider for OkhsvProvider {
+    type FilterMaterial = OkhsvMaterial;
+    type Viz2dMaterial = Okhsv2DVizMaterial;
+    type Viz3dMaterial = Okhsv3DVizMaterial;
+}
+
+impl FromImage for OkhsvProvider {
+    fn from_image(img: Handle<Image>) -> Self {
         OkhsvProvider {
-            filter,
-            viz2d_material,
-            viz3d_material,
+            filter: OkhsvMaterial::new(360., img),
+            viz2d_material: Okhsv2DVizMaterial::new(360.),
+            viz3d_material: Okhsv3DVizMaterial::new(360.),
             cache: HashMap::new(),
         }
     }

@@ -1,9 +1,18 @@
 use std::collections::BTreeMap;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, sprite::Material2d};
+
+pub trait CSpaceProvider: Provider + Resource + FromImage {
+    type FilterMaterial: Material2d;
+    type Viz2dMaterial: Material2d;
+    type Viz3dMaterial: Material;
+}
+
+pub trait FromImage {
+    fn from_image(img: Handle<Image>) -> Self;
+}
+
 pub trait Provider {
-    /// returns the value for histogram given a pixel
-    fn convert(&self, pixel: Color) -> i64;
     /// the max value for the key field
     fn max(&self) -> f32;
     /// the min value for the key field
@@ -18,9 +27,13 @@ pub trait Provider {
     fn set(&mut self, new: f32);
     /// give current value
     fn current(&self) -> f32;
+
     /// draw 3d viz mesh
     fn create_mesh(&mut self, img: &Image) -> Mesh;
 
+    /// returns the value for histogram given a pixel
+    fn convert(&self, pixel: Color) -> i64;
+    /// returns 2d histogram data for given image
     fn histogram_data(&self, img: &Image) -> Vec<(f32, f32)> {
         let mut result: BTreeMap<i64, i64> = BTreeMap::new();
         let w = img.width();
