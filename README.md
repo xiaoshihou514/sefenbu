@@ -24,6 +24,8 @@ Options:
   -V, --version        Print version
 ```
 
+You also need the `shaders/` directory during runtime.
+
 ## Installation
 
 Install dependencies for [bevy](https://bevyengine.org/learn/quick-start/getting-started/setup/#installing-os-dependencies) first.
