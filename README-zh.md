@@ -35,3 +35,4 @@ cargo install sefenbu
 ## 感谢
 
 - 感谢[TD-Sky](https://github.com/TD-Sky)义务帮我解决rust的各种问题！
+- 感谢[char-BS](https://github.com/char-BS)包涵我爱做项目的瘾！

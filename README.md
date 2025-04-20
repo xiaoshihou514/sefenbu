@@ -37,3 +37,4 @@ For those on X11, remove the wayland flag from `Cargo.toml` and build from sourc
 ## Credits
 
 - [TD-Sky](https://github.com/TD-Sky) for all my rust refactoring questions
+- [char-BS](https://github.com/char-BS) for bearing with my enthusiasm
