@@ -1,8 +1,6 @@
-![Crates.io Version](https://img.shields.io/crates/v/sefenbu)
+![版本](https://img.shields.io/crates/v/sefenbu)
 
-[中文文档](./README-zh.md)
-
-sefenbu（色分布，sè fēn bù，color distribution）visualizes color distribution for an image. The main use for this is to make colorschemes. Supports OKHSV, OKHSL, HSV, HSL.
+可视化一张图片的颜色分布，主要用来根据图片设计配色。支持OKHSV，OKHSL，HSV，HSL色彩空间。
 
 |                                `sefenbu -u okhsv test.jpg`                                |                                `sefenbu -u okhsl test.jpg`                                |
 | :---------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------: |
@@ -10,7 +8,7 @@ sefenbu（色分布，sè fēn bù，color distribution）visualizes color distr
 |                                 `sefenbu -u hsv test.jpg`                                 |                                 `sefenbu -u hsl test.jpg`                                 |
 |  ![hsv](https://github.com/user-attachments/assets/f30a24dd-dcbc-4c94-b64f-df51226bf179)  |  ![hsl](https://github.com/user-attachments/assets/6d682129-6cf7-488d-9923-e31ead506800)  |
 
-## Usage
+## 用法
 
 ```
 Usage: sefenbu [OPTIONS] <FILE>
@@ -24,16 +22,16 @@ Options:
   -V, --version        Print version
 ```
 
-## Installation
+## 安装
 
-Install dependencies for [bevy](https://bevyengine.org/learn/quick-start/getting-started/setup/#installing-os-dependencies) first.
+系统依赖为[bevy依赖](https://bevyengine.org/learn/quick-start/getting-started/setup/#installing-os-dependencies)。
 
 ```shell
 cargo install sefenbu
 ```
 
-For those on X11, remove the wayland flag from `Cargo.toml` and build from source.
+如果你用X11，把`Cargo.toml`里的wayland flag去掉以编译。
 
-## Credits
+## 感谢
 
-- [TD-Sky](https://github.com/TD-Sky) for all my rust refactoring questions
+- 感谢[TD-Sky](https://github.com/TD-Sky)义务帮我解决rust的各种问题！
