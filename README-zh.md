@@ -22,6 +22,8 @@ Options:
   -V, --version        Print version
 ```
 
+你还需要将`shaders/`文件夹放在当前目录以供加载。
+
 ## 安装
 
 系统依赖为[bevy依赖](https://bevyengine.org/learn/quick-start/getting-started/setup/#installing-os-dependencies)。
