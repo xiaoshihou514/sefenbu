@@ -7,13 +7,14 @@ use bevy::{prelude::*, sprite::Material2dPlugin};
 use clap::Parser;
 use cli::Cli;
 use controls::*;
-use providers::{generic::CSpaceProvider, okhsv::OkhsvProvider};
+use providers::{generic::CSpaceProvider, okhsl::OkhslProvider, okhsv::OkhsvProvider};
 use scene::*;
 
 fn main() {
     let args = Cli::parse();
     match args.using.clone().unwrap_or("okhsv".to_string()).as_str() {
         "okhsv" => app_run::<OkhsvProvider>(args),
+        "okhsl" => app_run::<OkhslProvider>(args),
         s => error!("Did not recognize color space {}", s),
     }
 }

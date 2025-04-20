@@ -124,7 +124,7 @@ pub fn change_param<A: CSpaceProvider>(
         let y_threshold = size.y * VIZ3D_H_RATIO;
 
         if pos.x > x_threshold && pos.y > y_threshold {
-            p.set(pos.x - x_threshold / (size.x - x_threshold));
+            p.set((pos.x - x_threshold) / (size.x - x_threshold));
         }
     }
 
