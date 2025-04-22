@@ -1,6 +1,6 @@
 ![版本](https://img.shields.io/crates/v/sefenbu)
 
-可视化一张图片的颜色分布，主要用来根据图片设计配色。支持OKHSV，OKHSL，HSV，HSL色彩空间。
+通过可视化一张图片的颜色分布来帮助你根据图片设计配色。支持OKHSV，OKHSL，HSV，HSL色彩空间。
 
 |                                `sefenbu -u okhsv test.jpg`                                |                                `sefenbu -u okhsl test.jpg`                                |
 | :---------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------: |
@@ -22,6 +22,8 @@ Options:
   -V, --version        Print version
 ```
 
+你还需要将`shaders/`文件夹放在当前目录以供加载。
+
 ## 安装
 
 系统依赖为[bevy依赖](https://bevyengine.org/learn/quick-start/getting-started/setup/#installing-os-dependencies)。
@@ -32,7 +34,7 @@ cargo install sefenbu
 
 如果你用X11，把`Cargo.toml`里的wayland flag去掉以编译。
 
-## 感谢
+## 鸣谢
 
 - 感谢[TD-Sky](https://github.com/TD-Sky)义务帮我解决rust的各种问题！
 - 感谢[char-BS](https://github.com/char-BS)包涵我爱做项目的瘾！
