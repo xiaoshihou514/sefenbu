@@ -1,8 +1,13 @@
 struct HSV { h: f32, s: f32, v: f32 };
+
+fn to_non_linear(lin: f32) -> f32 {
+    return select(12.92 * lin, 1.055 * (pow(lin, (1.0 / 2.4))) - 0.055, lin > 0.0031308);
+}
+
 fn srgb_to_hsv(r_: f32, g_: f32, b_: f32) -> HSV {
-    let r = r_ / 255;
-    let g = g_ / 255;
-    let b = b_ / 255;
+    let r = to_non_linear(r_) / 255;
+    let g = to_non_linear(g_) / 255;
+    let b = to_non_linear(b_) / 255;
 
     var max: f32 = max(max(r, g), b);
     var min: f32 = min(min(r, g), b);

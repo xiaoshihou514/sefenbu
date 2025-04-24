@@ -2,7 +2,8 @@
 #import "shaders/oklab_common.wgsl"::{
     HSV,
     RGB,
-    srgb_to_okhsv
+    srgb_to_okhsv,
+    to_non_linear_rgb
 }
 
 @group(2) @binding(0) var<uniform> h: f32;
@@ -13,8 +14,7 @@
 @fragment
 fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     var pt: vec4<f32> = textureSample(img_texture, img_sampler, mesh.uv);
-    let rgb: RGB = RGB(pt.r, pt.g, pt.b);
-    let okhsv: HSV = srgb_to_okhsv(rgb);
+    let okhsv: HSV = srgb_to_okhsv(to_non_linear_rgb(pt.r, pt.g, pt.b));
 
     // Make opaque and grayscale if not in color slice
     if abs(okhsv.h * 360. - h) > (delta / 2.) {

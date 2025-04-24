@@ -2,6 +2,15 @@
 fn cbrt(x: f32) -> f32 {
     return pow(x, 1. / 3.0);
 }
+
+fn to_non_linear(lin: f32) -> f32 {
+    return select(12.92 * lin, 1.055 * (pow(lin, (1.0 / 2.4))) - 0.055, lin > 0.0031308);
+}
+
+fn to_non_linear_rgb(r: f32, g: f32, b: f32) -> RGB {
+    return RGB(to_non_linear(r), to_non_linear(g), to_non_linear(b));
+}
+
 const pi: f32 =
     3.1415926535897932384626433832795028841971693993751058209749445923078164062f;
 const FLT_MAX: f32 = 340282346638528859811704183484516925440.0;
@@ -131,13 +140,11 @@ fn compute_max_saturation(a: f32, b: f32) -> f32 {
 
   return S;
 }
+
 fn srgb_transfer_function_inv(a: f32) -> f32 {
-  if .04045f < a {
-    return pow((a + .055f) / 1.055f, 2.4f);
-  } else {
-    return a / 12.92f;
-  }
+  return select(a / 12.92f, pow((a + .055f) / 1.055f, 2.4f), .04045f < a);
 }
+
 fn linear_srgb_to_oklab(c: RGB) -> Lab {
   var l: f32 = 0.4122214708f * c.r + 0.5363325363f * c.g + 0.0514459929f * c.b;
   var m: f32 = 0.2119034982f * c.r + 0.6806995451f * c.g + 0.1073969566f * c.b;
@@ -172,7 +179,7 @@ fn srgb_to_okhsv(rgb: RGB) -> HSV
 		srgb_transfer_function_inv(rgb.r),
 		srgb_transfer_function_inv(rgb.g),
 		srgb_transfer_function_inv(rgb.b)
-    ));
+   ));
 
 	var C: f32 = sqrt(lab.a * lab.a + lab.b * lab.b);
 	var a_: f32 = lab.a / C;
@@ -446,11 +453,7 @@ fn srgb_to_okhsl(rgb: RGB) -> HSL
 
 fn srgb_transfer_function(a: f32) -> f32
 {
-    if 0.0031308f >= a {
-        return a;
-    } else {
-        return 1.055f * pow(a, .4166666666666667f) - .055f;
-    }
+    return select(1.055f * pow(a, .4166666666666667f) - .055f, a, 0.0031308f >= a);
 }
 
 fn okhsl_to_srgb(hsl: HSL) -> RGB

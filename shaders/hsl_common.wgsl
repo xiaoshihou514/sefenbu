@@ -1,5 +1,14 @@
 struct HSL { h: f32, s: f32, l: f32 };
-fn srgb_to_hsl(r: f32, g: f32, b: f32) -> HSL {
+
+fn to_non_linear(lin: f32) -> f32 {
+    return select(12.92 * lin, 1.055 * (pow(lin, (1.0 / 2.4))) - 0.055, lin > 0.0031308);
+}
+
+fn srgb_to_hsl(r_: f32, g_: f32, b_: f32) -> HSL {
+    let r = to_non_linear(r_);
+    let g = to_non_linear(g_);
+    let b = to_non_linear(b_);
+
     var max: f32 = max(max(r, g), b);
     var min: f32 = min(min(r, g), b);
     var h: f32 = (max + min) / 2;
