@@ -22,7 +22,7 @@ Options:
   -V, --version        Print version
 ```
 
-你还需要将`shaders/`文件夹放在当前目录以供加载。
+你还需要将`shaders/`文件夹与可执行文件放在同一目录以供加载。
 
 ## 安装
 

@@ -33,12 +33,15 @@ where
     Material2dPlugin<A::Viz2dMaterial>: Plugin,
     MaterialPlugin<A::Viz3dMaterial>: Plugin,
 {
+    let mut exe_path = std::env::current_exe().unwrap();
+    if !(exe_path.pop()) {
+        println!("Cannot pop exe path: {}", exe_path.to_string_lossy());
+        std::process::exit(-1);
+    }
+
     let default_plugin = DefaultPlugins
         .set(AssetPlugin {
-            file_path: std::env::current_dir()
-                .unwrap()
-                .to_string_lossy()
-                .into_owned(),
+            file_path: exe_path.to_string_lossy().into_owned(),
             ..Default::default()
         })
         .set(WindowPlugin {

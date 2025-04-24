@@ -24,7 +24,7 @@ Options:
   -V, --version        Print version
 ```
 
-You also need the `shaders/` directory during runtime.
+You need to place the executable with the `shaders/` directory.
 
 ## Installation
 
