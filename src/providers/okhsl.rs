@@ -104,7 +104,7 @@ impl Provider for OkhslProvider {
                 c
             }
         };
-        if (okhsl.lightness * Self::MAX - self.current()).abs() > Self::DELTA {
+        if (okhsl.lightness * Self::MAX - self.current()).abs() < Self::DELTA {
             // within range
             (
                 true,

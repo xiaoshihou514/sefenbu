@@ -105,7 +105,7 @@ impl Provider for OkhsvProvider {
                 c
             }
         };
-        if (okhsv.hue.into_positive_degrees() - self.current()).abs() > Self::DELTA {
+        if (okhsv.hue.into_positive_degrees() - self.current()).abs() < Self::DELTA {
             // within range
             (
                 true,

@@ -226,7 +226,7 @@ fn spawn_histogram_covering<A: CSpaceProvider>(
 
     let mut x = A::MIN;
     let mut iter = data.iter().peekable();
-    while x < A::MAX {
+    while x <= A::MAX {
         // data is in ascending order, so just iter through
         let ratio = match iter.peek() {
             Some((y, z)) => {
