@@ -58,7 +58,7 @@ pub fn control_blob(
     mouse: Res<ButtonInput<MouseButton>>,
     accumulated_mouse_motion: Res<AccumulatedMouseMotion>,
 ) {
-    let Ok((mut transform, conf)) = blob.get_single_mut() else {
+    let Ok((mut transform, conf)) = blob.single_mut() else {
         return;
     };
 
@@ -147,14 +147,14 @@ pub fn change_param<A: CSpaceProvider>(
     // apply change, original item substituted
     if p.is_changed() {
         // update image filter
-        img_canvas.single_mut().0 .0 = img_filters.add(p.get_filter());
+        img_canvas.single_mut().unwrap().0 .0 = img_filters.add(p.get_filter());
         // update viz2d current color indicator
-        viz2d_canvas.single_mut().0 .0 = viz2d_materials.add(p.get_viz2d_material());
+        viz2d_canvas.single_mut().unwrap().0 .0 = viz2d_materials.add(p.get_viz2d_material());
         // update viz3d material
-        viz3d_mesh.single_mut().0 .0 .0 = viz3d_materials.add(p.get_viz3d_material());
+        viz3d_mesh.single_mut().unwrap().0 .0 .0 = viz3d_materials.add(p.get_viz3d_material());
         // update viz3d mesh
-        viz3d_mesh.single_mut().0 .1 .0 = meshes.add(p.create_mesh(&img.unwrap().0));
+        viz3d_mesh.single_mut().unwrap().0 .1 .0 = meshes.add(p.create_mesh(&img.unwrap().0));
         // update param banner
-        text.single_mut().0 = format!("{}", p.current());
+        text.single_mut().unwrap().0 = format!("{}", p.current());
     }
 }

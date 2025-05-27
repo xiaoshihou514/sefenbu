@@ -79,7 +79,7 @@ pub fn draw_scene<A: CSpaceProvider>(
         return;
     }
 
-    let (entity, loader) = query.single();
+    let (entity, loader) = query.single().unwrap();
     let load_state = asset_server.get_load_state(&loader.0);
 
     if let (Some(LoadState::Loaded), Some(image)) = (load_state, images.get_mut(&loader.0)) {

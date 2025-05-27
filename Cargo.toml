@@ -9,7 +9,7 @@ repository = "https://github.com/xiaoshihou514/sefenbu"
 readme = "README.md"
 
 [dependencies]
-bevy = { version = "0.15.2", features = [
+bevy = { version = "0.16.0", features = [
   "wayland",
   "jpeg",
   "png",

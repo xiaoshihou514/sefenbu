@@ -3,8 +3,8 @@ use bevy::{
     prelude::*,
     render::render_resource::{AsBindGroup, ShaderRef},
     sprite::{AlphaMode2d, Material2d},
-    utils::HashMap,
 };
+use std::collections::HashMap;
 
 use super::generic::{CSpaceProvider, FromImage, Provider};
 
