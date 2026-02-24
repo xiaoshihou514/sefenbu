@@ -18,5 +18,9 @@
   {
     "name": "gitgud",
     "url": "git@gitgud.io:xiaoshihou514/sefenbu.git"
+  },
+  {
+    "name": "frama",
+    "url": "git@framagit.org:xiaoshihou/sefenbu.git"
   }
 ]
